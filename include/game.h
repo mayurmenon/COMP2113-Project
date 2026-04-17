@@ -4,6 +4,8 @@
 #include <vector>
 #include "map.h"
 #include "player.h"
+#include "item.h"
+#include <map>
 using namespace std;
 enum class Difficulty { Easy, Normal, Hard };
 class Game {
@@ -13,7 +15,7 @@ public:
     // Starts the menu and gameplay flow. Input: none. Output: none.
     void start();
     // Restores a saved run. Input: saved game values. Output: none.
-    void loadState(int minutes, Difficulty difficulty, const string& roomId, int suspicion, bool libraryClue, bool adminRoute, bool folder, int loopNumber);
+    void loadState(int minutes, Difficulty difficulty, const string& roomId, int suspicion, bool libraryClue, bool adminRoute, bool folder, int loopNumber, const string& inventoryData, int hideStreak, int totalMoves, int totalSearches, int itemsUsed, int codeFragmentsNeeded);
     // Returns the current in-game time in minutes. Input: none. Output: total minutes.
     int currentMinutes() const;
     // Returns the current loop count. Input: none. Output: loop number.
@@ -29,7 +31,10 @@ public:
     // Tells whether the admin route is known. Input: none. Output: true or false.
     bool adminRoute() const;
     // Tells whether the folder has been collected. Input: none. Output: true or false.
+    // Tells whether the folder has been collected. Input: none. Output: true or false.
     bool folder() const;
+    // Returns the number of code fragments needed for the run. Output: count.
+    int codeFragmentsNeeded() const;
 private:
     CampusMap map_;
     Player player_;
@@ -42,6 +47,10 @@ private:
     bool libraryClue_;
     bool adminRoute_;
     bool folder_;
+
+    map<ItemType, Item> itemTable_;
+    int codeFragmentsNeeded_;
+
     // Resets the loop state. Input: keepProgress flag and reset reason. Output: none.
     void resetLoop(bool keepProgress, const string& reason);
     // Returns the time limit for the current difficulty. Input: none. Output: end time in minutes.
@@ -79,17 +88,22 @@ private:
     // Shows saved clue notes. Input: none. Output: none.
     void showJournal() const;
     // Shows current objectives. Input: none. Output: none.
+    // Shows current objectives. Input: none. Output: none.
     void showObjective() const;
+    // Shows current inventory items and descriptions. Input: none. Output: none.
+    void showInventory() const;
     // Parses and runs one command. Input: raw user command. Output: none.
     void handle(const string& input);
-    // Moves the player if the route is valid. Input: target room text. Output: none.
+    // Move player logic
     void movePlayer(const string& target);
-    // Searches the current room for progress. Input: none. Output: none.
+    // Search room logic
     void searchRoom();
-    // Puts the player in a hidden state. Input: none. Output: none.
+    // Hide player logic
     void hidePlayer();
-    // Advances time by waiting. Input: number of minutes. Output: none.
+    // Wait logic
     void waitPlayer(int minutes);
+    // Use item logic. Input: item name. Output: none.
+    void useItem(const string& itemName);
     // Adds time and checks for day end. Input: number of minutes. Output: true if loop continues.
     bool passTime(int minutes);
     // Checks whether suspicion causes a reset. Input: none. Output: none.

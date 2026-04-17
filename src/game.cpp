@@ -4,6 +4,9 @@
 #include <sstream>
 #include "save.h"
 #include "utils.h"
+#include "item.h"
+#include <cstdlib>
+#include <ctime>
 using namespace std;
 namespace {
 // Stores the terminal color codes used by the UI. Input: none. Output: none.
@@ -50,7 +53,11 @@ Game::Game()
       quit_(false),
       libraryClue_(false),
       adminRoute_(false),
-      folder_(false) {}
+      folder_(false) {
+    srand(time(nullptr));
+    itemTable_ = createItemTable();
+    codeFragmentsNeeded_ = (rand() % 3) + 1;
+}
 void Game::start() {
     while (!quit_) {
         clearScreen();
@@ -78,7 +85,7 @@ void Game::start() {
         }
     }
 }
-void Game::loadState(int minutes, Difficulty difficulty, const string& roomId, int suspicion, bool libraryClue, bool adminRoute, bool folder, int loopNumber) {
+void Game::loadState(int minutes, Difficulty difficulty, const string& roomId, int suspicion, bool libraryClue, bool adminRoute, bool folder, int loopNumber, const string& inventoryData, int hideStreak, int totalMoves, int totalSearches, int itemsUsed, int codeFragmentsNeeded) {
     difficulty_ = difficulty;
     currentMinutes_ = minutes;
     loopNumber_ = loopNumber;
@@ -88,8 +95,14 @@ void Game::loadState(int minutes, Difficulty difficulty, const string& roomId, i
     running_ = true;
     won_ = false;
     player_.reset();
+    codeFragmentsNeeded_ = codeFragmentsNeeded;
     if (map_.get(roomId)) player_.moveTo(roomId);
     player_.setSuspicion(suspicion);
+    player_.loadInventoryFromString(inventoryData);
+    for (int i = 0; i < hideStreak; i++) player_.incrementHideStreak();
+    for (int i = 0; i < totalMoves; i++) player_.incrementMoves();
+    for (int i = 0; i < totalSearches; i++) player_.incrementSearches();
+    for (int i = 0; i < itemsUsed; i++) player_.incrementItemsUsed();
 }
 int Game::currentMinutes() const { return currentMinutes_; }
 int Game::loopNumber() const { return loopNumber_; }
@@ -103,6 +116,7 @@ const Player& Game::player() const { return player_; }
 bool Game::libraryClue() const { return libraryClue_; }
 bool Game::adminRoute() const { return adminRoute_; }
 bool Game::folder() const { return folder_; }
+int Game::codeFragmentsNeeded() const { return codeFragmentsNeeded_; }
 void Game::resetLoop(bool keepProgress, const string& reason) {
     if (keepProgress) loopNumber_++;
     else {
@@ -113,6 +127,7 @@ void Game::resetLoop(bool keepProgress, const string& reason) {
     folder_ = false;
     currentMinutes_ = 480;
     player_.reset();
+    codeFragmentsNeeded_ = (rand() % 3) + 1;
     running_ = true;
     won_ = false;
     if (!reason.empty()) {
@@ -172,7 +187,7 @@ void Game::showAbout() const {
         "take the folder from the archive",
         "reach the rooftop before the loop resets",
         "",
-        "commands: look move search hide wait status map journal objective save load menu quit"});
+        "commands: look move search hide wait use inventory status map journal objective save load menu quit"});
 }
 void Game::chooseDifficulty() {
     clearScreen();
@@ -211,7 +226,7 @@ void Game::playLoop() {
 void Game::showHud() const {
     vector<string> lines;
     lines.push_back("time " + Utils::formatTime(currentMinutes_) + " | loop " + to_string(loopNumber_) + " | difficulty " + difficultyName());
-    lines.push_back("room " + player_.room() + " | hidden " + yesNo(player_.hidden()));
+    lines.push_back("room " + player_.room() + " | hidden " + yesNo(player_.hidden()) + " | risk " + player_.suspicionRiskLevel());
     lines.push_back("suspicion " + bar(player_.suspicion(), 100, 20) + " " + to_string(player_.suspicion()) + "/100");
     lines.push_back("clue " + yesNo(libraryClue_) + " | route " + yesNo(adminRoute_) + " | folder " + yesNo(folder_));
     drawBox("status", lines);
@@ -236,18 +251,23 @@ void Game::showHelp() const {
         "search     look for progress clues",
         "hide       lower suspicion",
         "wait 10    pass time",
+        "use [item] use an item from inventory",
+        "inventory  show your items",
         "status map journal objective save load menu quit"});
 }
 void Game::showMap() const { drawBox("map", splitLines(map_.layout())); }
 void Game::showStatus() const {
     int minutesLeft = dayEnd() - currentMinutes_;
     if (minutesLeft < 0) minutesLeft = 0;
-    drawBox("status", vector<string>{
-        "time " + Utils::formatTime(currentMinutes_),
-        "time left " + to_string(minutesLeft) + " minutes",
-        "difficulty " + difficultyName(),
-        "suspicion " + to_string(player_.suspicion()) + "/100",
-        "hidden " + yesNo(player_.hidden())});
+    vector<string> lines;
+    lines.push_back("time " + Utils::formatTime(currentMinutes_));
+    lines.push_back("time left " + to_string(minutesLeft) + " minutes");
+    lines.push_back("difficulty " + difficultyName());
+    lines.push_back("suspicion " + to_string(player_.suspicion()) + "/100");
+    lines.push_back("hidden " + yesNo(player_.hidden()));
+    vector<string> summary = player_.statusSummary();
+    lines.insert(lines.end(), summary.begin(), summary.end());
+    drawBox("status", lines);
 }
 void Game::showJournal() const {
     vector<string> lines;
@@ -263,8 +283,109 @@ void Game::showObjective() const {
     lines.push_back(string(adminRoute_ ? "[x] " : "[ ] ") + "find the admin route");
     lines.push_back(string(folder_ ? "[x] " : "[ ] ") + "take the folder");
     lines.push_back(string(folder_ && player_.room() == "rooftop" ? "[x] " : "[ ] ") + "reach the rooftop");
+    if (player_.itemCount(ItemType::CodeFragment) > 0 || player_.hasItem(ItemType::RooftopKey)) {
+        int count = player_.itemCount(ItemType::CodeFragment);
+        lines.push_back(string(count >= codeFragmentsNeeded_ ? "[x] " : "[ ] ") + "collect code fragments (" + to_string(count) + "/" + to_string(codeFragmentsNeeded_) + ")");
+    }
     drawBox("objective", lines);
 }
+void Game::showInventory() const {
+    vector<ItemType> items = player_.inventoryList();
+    if (items.empty()) {
+        drawBox("inventory", vector<string>{"your inventory is empty"});
+        return;
+    }
+    vector<string> lines;
+    for (int i = 0; i < (int)items.size(); i++) {
+        ItemType type = items[i];
+        map<ItemType, Item>::const_iterator it = itemTable_.find(type);
+        if (it != itemTable_.end()) {
+            const Item& item = it->second;
+            int count = player_.itemCount(type);
+            lines.push_back(item.name + (count > 1 ? " (x" + to_string(count) + ")" : ""));
+            lines.push_back("  " + item.description);
+        }
+    }
+    drawBox("inventory", lines);
+}
+
+void Game::useItem(const string& itemName) {
+    if (itemName.empty()) {
+        drawBox("use", vector<string>{"what do you want to use?"});
+        return;
+    }
+    ItemType type;
+    if (!itemNameToType(itemName, type)) {
+        drawBox("use", vector<string>{"unknown item: " + itemName});
+        return;
+    }
+    if (!player_.hasItem(type)) {
+        drawBox("use", vector<string>{"you do not have a " + itemName});
+        return;
+    }
+    
+    map<ItemType, Item>::const_iterator it = itemTable_.find(type);
+    if (it == itemTable_.end()) return;
+    const Item& item = it->second;
+
+    vector<string> lines;
+    bool success = false;
+
+    if (type == ItemType::HallPass) {
+        if (player_.suspicion() > 0) {
+            lines.push_back(item.useMessage);
+            player_.addSuspicion(item.suspicionEffect);
+            lines.push_back("suspicion dropped by 15");
+            success = true;
+        } else {
+            lines.push_back(item.failMessage);
+            lines.push_back("your suspicion is already 0.");
+        }
+    } else if (type == ItemType::Keycard) {
+        lines.push_back(item.failMessage);
+        lines.push_back("the keycard is used automatically when entering restricted areas.");
+    } else if (type == ItemType::Screwdriver) {
+        if (player_.room() == "bridge") {
+            lines.push_back(item.useMessage);
+            lines.push_back("you can now move directly to the rooftop via the maintenance shaft.");
+        } else {
+            lines.push_back(item.failMessage);
+        }
+    } else if (type == ItemType::CodeFragment) {
+        if (player_.room() == "archive" || player_.room() == "admin") {
+            lines.push_back(item.useMessage);
+            lines.push_back("the fragments form the sequence you need.");
+        } else {
+            lines.push_back(item.failMessage);
+        }
+    } else if (type == ItemType::RooftopKey) {
+        if (player_.room() == "archive") {
+            lines.push_back(item.useMessage);
+            lines.push_back("rooftop door unlocked. you can now move explicitly to the rooftop cleanly.");
+            success = true; 
+        } else {
+            lines.push_back(item.failMessage);
+        }
+    }
+
+    if (success) {
+        player_.incrementItemsUsed();
+        if (item.consumable) {
+            player_.removeItem(type);
+            lines.push_back("(" + item.name + " consumed)");
+        }
+    }
+
+    if (type == ItemType::RooftopKey && success) {
+        player_.moveTo("rooftop");
+        lines.push_back("you moved to rooftop.");
+        if (folder_) won_ = true;
+        checkReset();
+    }
+
+    drawBox("use " + itemName, lines);
+}
+
 void Game::handle(const string& input) {
     string command = lowerText(input);
     string argument = argumentOf(input);
@@ -275,6 +396,8 @@ void Game::handle(const string& input) {
     else if (command == "3" || command == "search") searchRoom();
     else if (command == "4" || command == "hide") hidePlayer();
     else if (command == "5" || command == "wait" || command.rfind("wait ", 0) == 0) waitPlayer(argument.empty() ? 10 : parseMinutes(argument, 10));
+    else if (command == "inventory" || command == "inv" || command == "i") showInventory();
+    else if (command == "use" || command.rfind("use ", 0) == 0) useItem(argument);
     else if (command == "6" || command == "status") showStatus();
     else if (command == "7" || command == "map") showMap();
     else if (command == "8" || command == "journal") showJournal();
@@ -310,13 +433,27 @@ void Game::movePlayer(const string& target) {
         drawBox("move", vector<string>(1, "the archive route is still unclear"));
         return;
     }
+    if (destination == "rooftop" && player_.room() == "archive" && !player_.hasItem(ItemType::RooftopKey)) {
+        drawBox("move", vector<string>(1, "the door to the roof is locked. you need the rooftop key."));
+        return;
+    }
+    if (destination == "rooftop" && player_.room() == "bridge" && !player_.hasItem(ItemType::Screwdriver)) {
+        drawBox("move", vector<string>(1, "the maintenance panel is bolted shut. you need a screwdriver."));
+        return;
+    }
     bool wasHidden = player_.hidden();
     const Room* room = map_.get(destination);
     player_.moveTo(destination);
+    player_.resetHideStreak();
+    player_.incrementMoves();
     if (room && room->restricted) {
-        int rise = difficulty_ == Difficulty::Hard ? 14 : difficulty_ == Difficulty::Easy ? 8 : 11;
-        if (wasHidden) rise -= 3;
-        player_.addSuspicion(rise);
+        if (player_.hasItem(ItemType::Keycard)) {
+            // keycard avoids penalty
+        } else {
+            int rise = difficulty_ == Difficulty::Hard ? 14 : difficulty_ == Difficulty::Easy ? 8 : 11;
+            if (wasHidden) rise -= 3;
+            player_.addSuspicion(rise);
+        }
     }
     if (!passTime(10)) return;
     vector<string> lines;
@@ -331,6 +468,33 @@ void Game::searchRoom() {
     if (!room) return;
     if (!passTime(8)) return;
     vector<string> lines;
+    player_.incrementSearches();
+
+    if (room->id == "corridor" || room->id == "commons") {
+        if (!player_.hasItem(ItemType::HallPass) && rand() % 2 == 0) {
+            player_.addItem(ItemType::HallPass);
+            lines.push_back("you found a forged hall pass.");
+        }
+    } else if (room->id == "faculty") {
+        if (libraryClue_ && !player_.hasItem(ItemType::Keycard)) {
+            player_.addItem(ItemType::Keycard);
+            lines.push_back("you found an admin keycard using the library clue.");
+        }
+    } else if (room->id == "lab") {
+        if (!player_.hasItem(ItemType::Screwdriver)) {
+            player_.addItem(ItemType::Screwdriver);
+            lines.push_back("you picked up a flathead screwdriver.");
+        }
+    } else if (room->id == "admin" || room->id == "archive") {
+        if (player_.itemCount(ItemType::CodeFragment) < codeFragmentsNeeded_) {
+            player_.addItem(ItemType::CodeFragment);
+            lines.push_back("you uncovered a code fragment.");
+        } else if (player_.room() == "archive" && player_.itemCount(ItemType::CodeFragment) >= codeFragmentsNeeded_ && !player_.hasItem(ItemType::RooftopKey)) {
+            player_.addItem(ItemType::RooftopKey);
+            lines.push_back("you cracked the code and obtained the rooftop key!");
+        }
+    }
+
     if (room->id == "library") {
         if (!libraryClue_) {
             libraryClue_ = true;
@@ -361,14 +525,16 @@ void Game::hidePlayer() {
         drawBox("hide", vector<string>(1, "you are already hidden"));
         return;
     }
-    if (player_.room() == "rooftop") {
+    if (!player_.canHideInRoom(player_.room())) {
         drawBox("hide", vector<string>(1, "there is nowhere useful to hide here"));
         return;
     }
     if (!passTime(5)) return;
     player_.setHidden(true);
-    player_.addSuspicion(-8);
-    drawBox("hide", vector<string>{"you keep a low profile for a while", "suspicion drops by 8"});
+    player_.incrementHideStreak();
+    int eff = player_.hideEffectiveness();
+    player_.addSuspicion(eff);
+    drawBox("hide", vector<string>{"you keep a low profile for a while", "suspicion drops by " + to_string(-eff)});
 }
 void Game::waitPlayer(int minutes) {
     if (!passTime(minutes)) return;
@@ -379,11 +545,13 @@ void Game::waitPlayer(int minutes) {
         lines.push_back("keeping still lowers suspicion");
     }
     player_.setHidden(false);
+    player_.resetHideStreak();
     drawBox("wait", lines);
     checkReset();
 }
 bool Game::passTime(int minutes) {
     currentMinutes_ += minutes;
+    player_.applySuspicionDecay(minutes);
     if (currentMinutes_ >= dayEnd()) {
         resetLoop(true, "the day ends and the loop starts again");
         return false;

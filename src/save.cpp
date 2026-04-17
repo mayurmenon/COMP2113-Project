@@ -23,6 +23,12 @@ bool SaveSystem::save(const Game& game, const string& path) {
     out << "library=" << (game.libraryClue() ? 1 : 0) << '\n';
     out << "admin=" << (game.adminRoute() ? 1 : 0) << '\n';
     out << "folder=" << (game.folder() ? 1 : 0) << '\n';
+    out << "codefragments=" << game.codeFragmentsNeeded() << '\n';
+    out << "hidestreak=" << game.player().hideStreak() << '\n';
+    out << "moves=" << game.player().totalMoves() << '\n';
+    out << "searches=" << game.player().totalSearches() << '\n';
+    out << "itemsused=" << game.player().itemsUsed() << '\n';
+    out << "inventory=" << game.player().inventoryAsString() << '\n';
     return true;
 }
 bool SaveSystem::load(Game& game, const string& path) {
@@ -36,6 +42,12 @@ bool SaveSystem::load(Game& game, const string& path) {
     bool library = false;
     bool admin = false;
     bool folder = false;
+    int codeFragments = 1;
+    int hideStreak = 0;
+    int moves = 0;
+    int searches = 0;
+    int itemsUsed = 0;
+    string inventory = "";
     string line;
     while (getline(in, line)) {
         if (line.rfind("difficulty=", 0) == 0) difficulty = line.substr(11);
@@ -46,7 +58,13 @@ bool SaveSystem::load(Game& game, const string& path) {
         else if (line.rfind("library=", 0) == 0) library = line.substr(8) == "1";
         else if (line.rfind("admin=", 0) == 0) admin = line.substr(6) == "1";
         else if (line.rfind("folder=", 0) == 0) folder = line.substr(7) == "1";
+        else if (line.rfind("codefragments=", 0) == 0) codeFragments = stoi(line.substr(14));
+        else if (line.rfind("hidestreak=", 0) == 0) hideStreak = stoi(line.substr(11));
+        else if (line.rfind("moves=", 0) == 0) moves = stoi(line.substr(6));
+        else if (line.rfind("searches=", 0) == 0) searches = stoi(line.substr(9));
+        else if (line.rfind("itemsused=", 0) == 0) itemsUsed = stoi(line.substr(10));
+        else if (line.rfind("inventory=", 0) == 0) inventory = line.substr(10);
     }
-    game.loadState(time, parseDifficulty(difficulty), room, suspicion, library, admin, folder, loopNumber);
+    game.loadState(time, parseDifficulty(difficulty), room, suspicion, library, admin, folder, loopNumber, inventory, hideStreak, moves, searches, itemsUsed, codeFragments);
     return true;
 }
