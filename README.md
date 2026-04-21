@@ -1,35 +1,48 @@
 # Loopbreak: HKU After Hours
 
-Loopbreak is a small text-based campus stealth game.
+Loopbreak is a text-based campus stealth game set in a repeating school day.
 
-You are stuck in a repeating school day. The goal is to find the library clue, work out the admin route, take the sealed folder from the archive, and reach the rooftop before the loop resets.
+You begin each run in a dorm room at `08:00`. To break the loop, you need to move around campus, find the clue in the library, work out the route through the admin area, take the sealed folder from the archive, and escape through the rooftop before time or suspicion forces a reset.
 
-## Current Prototype
+## Game Flow
 
-- start menu and difficulty selection
-- campus movement between connected rooms
-- actions like `move`, `search`, `hide`, `wait`, `map`, `status`, `journal`, and `save`
-- suspicion system and loop reset system
-- simple save/load support
+Each action takes time. As you move deeper into restricted areas, your suspicion rises. If the day ends or suspicion reaches `100`, the loop resets and you return to the start of the day.
 
-## How The Loop Works
+Important progress is kept between loops:
 
-The loop resets in two situations:
+- library clue
+- admin route knowledge
+- loop count
 
-- the day runs out of time
-- your suspicion reaches `100`
+The folder does not carry over, so each successful run still needs a clean final route.
 
-When the loop resets:
+## Current Prototype Features
 
-- time goes back to `08:00`
-- you return to the starting room
-- the folder is removed
-- important progress like the library clue and admin route stays unlocked
-- the loop counter goes up by 1
+- main menu and difficulty selection
+- 11 connected campus rooms
+- text-based movement and room exploration
+- suspicion meter and hiding system
+- loop reset system
+- journal and objective display
+- save/load support
+- simple storybook-style terminal UI
 
-## How Time Works
+## Main Commands
 
-The game stores time as total minutes since midnight.
+- `look` shows the current room again
+- `move <room>` moves to a connected room
+- `search` checks the current room for progress
+- `hide` lowers suspicion for a short time
+- `wait <minutes>` passes time
+- `status` shows time, suspicion, and basic state
+- `map` shows the campus layout
+- `journal` shows saved clues
+- `objective` shows the main goals
+- `save` / `load` stores or restores the current run
+
+## Time System
+
+Time is stored as total minutes since midnight.
 
 Examples:
 
@@ -37,23 +50,47 @@ Examples:
 - `540` = `09:00`
 - `1200` = `20:00`
 
-Actions add minutes to the day:
+Current action costs:
 
-- `move` adds `10`
-- `search` adds `8`
-- `hide` adds `5`
-- `wait` adds the number you enter
+- `move` = `10` minutes
+- `search` = `8` minutes
+- `hide` = `5` minutes
+- `wait` = the amount entered
+
+## Campus Areas
+
+The current map includes:
+
+- dorm
+- corridor
+- lecture hall
+- library
+- commons
+- lab
+- faculty corridor
+- admin office
+- archive
+- bridge
+- rooftop
 
 ## Build And Run
+
+Linux / academy server:
 
 ```bash
 make
 ./loopbreak
 ```
 
-On Windows PowerShell:
+Windows PowerShell:
 
 ```powershell
 g++ -pedantic-errors -Wall -Wextra -std=c++11 -Iinclude main.cpp src/*.cpp -o loopbreak.exe
 .\loopbreak.exe
 ```
+
+## Notes
+
+- non-standard libraries used: none
+- the project is written in multiple source and header files
+- current save file name: `savegame.txt`
