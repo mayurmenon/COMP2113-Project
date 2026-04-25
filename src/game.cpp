@@ -234,14 +234,25 @@ void Game::showHud() const {
 void Game::showRoom() const {
     const Room* room = map_.get(player_.room());
     if (!room) return;
+    MovementContext context = movementContext();
     vector<string> lines;
     lines.push_back("scene  : " + room->name);
     lines.push_back("");
     lines.push_back(room->description);
     lines.push_back("");
-    lines.push_back("paths  : " + map_.exitsOf(room->id));
+    string ambient = room->ambientFor(loopNumber_, currentMinutes_);
+    if (!ambient.empty()) lines.push_back("ambient: " + ambient);
+    string explore = room->explorationFor(loopNumber_, currentMinutes_);
+    if (!explore.empty()) lines.push_back("intel  : " + explore);
+    string hint = room->progressionHintFor(loopNumber_, currentMinutes_);
+    if (!hint.empty()) lines.push_back("hint   : " + hint);
+    vector<string> dossier = map_.roomDossier(room->id);
+    if (!dossier.empty()) lines.push_back("brief  : " + dossier[(loopNumber_ + currentMinutes_ / 25) % dossier.size()]);
+    lines.push_back("");
+    lines.push_back("paths  : " + map_.exitsOf(room->id, context));
     lines.push_back("details: " + Utils::join(room->searchables, ", "));
     lines.push_back(string("tone   : ") + (room->restricted ? "restricted" : "public"));
+    lines.push_back("threat : " + room->threatProfile + " (patrol " + to_string(room->patrolIntensity) + "/4, " + room->patrolLabel() + ")");
     drawBox("current page", lines);
 }
 void Game::showHelp() const {
@@ -281,6 +292,7 @@ void Game::showJournal() const {
 }
 void Game::showObjective() const {
     vector<string> lines;
+    MovementContext context = movementContext();
     lines.push_back(string(libraryClue_ ? "[x] " : "[ ] ") + "find the library clue");
     lines.push_back(string(adminRoute_ ? "[x] " : "[ ] ") + "find the admin route");
     lines.push_back(string(player_.hasItem(ItemType::Screwdriver) ? "[x] " : "[ ] ") + "secure a tool for hidden routes");
@@ -290,6 +302,10 @@ void Game::showObjective() const {
         int count = player_.itemCount(ItemType::CodeFragment);
         lines.push_back(string(count >= codeFragmentsNeeded_ ? "[x] " : "[ ] ") + "collect code fragments (" + to_string(count) + "/" + to_string(codeFragmentsNeeded_) + ")");
     }
+    vector<string> routes = map_.availableEscapeRoutes(context);
+    if (routes.empty()) lines.push_back("escape routes: none unlocked yet");
+    else lines.push_back("escape routes: " + Utils::join(routes, ", "));
+    lines.push_back("progress stage: " + map_.progressionSummary(context, folder_));
     drawBox("objective", lines);
 }
 void Game::showInventory() const {
@@ -428,44 +444,9 @@ void Game::movePlayer(const string& target) {
         drawBox("move", vector<string>(1, "that room does not exist"));
         return;
     }
-    if (!map_.canMove(player_.room(), destination)) {
-        drawBox("move", vector<string>(1, "you cannot move there from here"));
-        return;
-    }
-    if (destination == "archive" && player_.room() == "admin" && !adminRoute_) {
-        drawBox("move", vector<string>(1, "the archive wing is blocked until you confirm the route"));
-        return;
-    }
-    if (destination == "archive" && player_.room() == "tunnel" && !player_.hasItem(ItemType::Screwdriver)) {
-        drawBox("move", vector<string>(1, "the tunnel grate is jammed. you need a screwdriver to force it"));
-        return;
-    }
-    if (destination == "archive" && !adminRoute_ && player_.room() != "tunnel") {
-        drawBox("move", vector<string>(1, "the archive route is still unclear"));
-        return;
-    }
-    if (destination == "tunnel" && player_.room() == "lab" && !player_.hasItem(ItemType::Screwdriver)) {
-        drawBox("move", vector<string>(1, "the lab hatch is still bolted. you need a screwdriver"));
-        return;
-    }
-    if (destination == "security" && !player_.hasItem(ItemType::Keycard) && !player_.hidden()) {
-        drawBox("move", vector<string>(1, "security hub requires cover. hide first or carry a keycard"));
-        return;
-    }
-    if (destination == "clocktower" && player_.room() == "library" && !libraryClue_) {
-        drawBox("move", vector<string>(1, "you have not decoded the library margin note to find that stairwell"));
-        return;
-    }
-    if (destination == "rooftop" && player_.room() == "archive" && !player_.hasItem(ItemType::RooftopKey)) {
-        drawBox("move", vector<string>(1, "the door to the roof is locked. you need the rooftop key."));
-        return;
-    }
-    if (destination == "rooftop" && player_.room() == "bridge" && !player_.hasItem(ItemType::Screwdriver)) {
-        drawBox("move", vector<string>(1, "the maintenance panel is bolted shut. you need a screwdriver."));
-        return;
-    }
-    if (destination == "rooftop" && player_.room() == "clocktower" && !player_.hasItem(ItemType::Keycard)) {
-        drawBox("move", vector<string>(1, "the clocktower gate is magnetically locked. a keycard is required."));
+    MoveCheck validation = map_.validateMove(player_.room(), destination, movementContext());
+    if (!validation.allowed) {
+        drawBox("move", vector<string>(1, validation.reason));
         return;
     }
     bool wasHidden = player_.hidden();
@@ -486,6 +467,8 @@ void Game::movePlayer(const string& target) {
     vector<string> lines;
     lines.push_back("you moved to " + room->name);
     if (room->restricted) lines.push_back("restricted areas raise suspicion");
+    if (validation.hiddenRoute) lines.push_back("you used a hidden route");
+    if (validation.riskyRoute) lines.push_back("this route is high-risk and heavily watched");
     drawBox("move", lines);
     if (destination == "rooftop" && folder_) won_ = true;
     checkReset();
@@ -593,4 +576,14 @@ bool Game::passTime(int minutes) {
 }
 void Game::checkReset() {
     if (player_.suspicion() >= 100) resetLoop(true, "security catches you before you can escape");
+}
+MovementContext Game::movementContext() const {
+    MovementContext context;
+    context.libraryClue = libraryClue_;
+    context.adminRoute = adminRoute_;
+    context.hasKeycard = player_.hasItem(ItemType::Keycard);
+    context.hasScrewdriver = player_.hasItem(ItemType::Screwdriver);
+    context.hasRooftopKey = player_.hasItem(ItemType::RooftopKey);
+    context.hidden = player_.hidden();
+    return context;
 }

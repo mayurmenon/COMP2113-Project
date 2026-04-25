@@ -108,5 +108,7 @@ private:
     bool passTime(int minutes);
     // Checks whether suspicion causes a reset. Input: none. Output: none.
     void checkReset();
+    // Builds map movement context from current player state.
+    MovementContext movementContext() const;
 };
 #endif
