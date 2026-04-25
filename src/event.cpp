@@ -154,7 +154,7 @@ void event_check_trigger(vector<game_event>& events, int current_minute) {
         srand(time(NULL));
         seeded = true;
     }
-    for (int i=0; i<events.size(); i++) {
+    for (int i = 0; i < (int) events.size(); i++) {
         if (events[i].status != event_inactive) {
             continue;
         }
@@ -175,7 +175,7 @@ void event_check_trigger(vector<game_event>& events, int current_minute) {
 
 void events_tick(vector<game_event>& events) {
     // Count down the duration of any active events
-    for (int i=0; i<events.size(); i++) {
+    for (int i = 0; i < (int) events.size(); i++) {
         if (events[i].status != event_active) {
             continue;
         }
@@ -189,7 +189,7 @@ void events_tick(vector<game_event>& events) {
 vector<game_event*> get_active_events_for_room(vector<game_event>& events) {
     // Get all events that are currently happening
     vector<game_event*> active;
-    for (int i=0; i<events.size(); i++) {
+    for (int i = 0; i < (int) events.size(); i++) {
         if (events[i].status == event_active) {
             active.push_back(&events[i]);
         }
@@ -199,7 +199,7 @@ vector<game_event*> get_active_events_for_room(vector<game_event>& events) {
 
 void events_reset_for_loop(vector<game_event>& events) {
     // Reset all events back to inactive for the next loop
-    for (int i=0; i<events.size(); i++) {
+    for (int i = 0; i < (int) events.size(); i++) {
         events[i].status = event_inactive;
         events[i].ticks_remaining = 0;
     }
