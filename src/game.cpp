@@ -185,7 +185,7 @@ void Game::showAbout() const {
         "find the clue in the library",
         "find the route in the admin office",
         "take the folder from the archive",
-        "reach the rooftop before the loop resets",
+        "escape via archive door, bridge shaft, or clocktower stair",
         "",
         "commands: look move search hide wait use inventory status map journal objective save load menu quit"});
 }
@@ -273,6 +273,8 @@ void Game::showJournal() const {
     vector<string> lines;
     if (libraryClue_) lines.push_back("library note: the reserve shelf hides the first clue");
     if (adminRoute_) lines.push_back("admin note: the archive path runs through the office wing");
+    if (player_.hasItem(ItemType::Screwdriver)) lines.push_back("lab note: screwdriver can open the bridge panel and tunnel hatch");
+    if (player_.hasItem(ItemType::Keycard)) lines.push_back("security note: keycard lowers heat in restricted corridors");
     if (folder_) lines.push_back("current loop: you already have the sealed folder");
     if (lines.empty()) lines.push_back("no notes saved yet");
     drawBox("journal", lines);
@@ -281,6 +283,7 @@ void Game::showObjective() const {
     vector<string> lines;
     lines.push_back(string(libraryClue_ ? "[x] " : "[ ] ") + "find the library clue");
     lines.push_back(string(adminRoute_ ? "[x] " : "[ ] ") + "find the admin route");
+    lines.push_back(string(player_.hasItem(ItemType::Screwdriver) ? "[x] " : "[ ] ") + "secure a tool for hidden routes");
     lines.push_back(string(folder_ ? "[x] " : "[ ] ") + "take the folder");
     lines.push_back(string(folder_ && player_.room() == "rooftop" ? "[x] " : "[ ] ") + "reach the rooftop");
     if (player_.itemCount(ItemType::CodeFragment) > 0 || player_.hasItem(ItemType::RooftopKey)) {
@@ -429,8 +432,28 @@ void Game::movePlayer(const string& target) {
         drawBox("move", vector<string>(1, "you cannot move there from here"));
         return;
     }
-    if (destination == "archive" && !adminRoute_) {
+    if (destination == "archive" && player_.room() == "admin" && !adminRoute_) {
+        drawBox("move", vector<string>(1, "the archive wing is blocked until you confirm the route"));
+        return;
+    }
+    if (destination == "archive" && player_.room() == "tunnel" && !player_.hasItem(ItemType::Screwdriver)) {
+        drawBox("move", vector<string>(1, "the tunnel grate is jammed. you need a screwdriver to force it"));
+        return;
+    }
+    if (destination == "archive" && !adminRoute_ && player_.room() != "tunnel") {
         drawBox("move", vector<string>(1, "the archive route is still unclear"));
+        return;
+    }
+    if (destination == "tunnel" && player_.room() == "lab" && !player_.hasItem(ItemType::Screwdriver)) {
+        drawBox("move", vector<string>(1, "the lab hatch is still bolted. you need a screwdriver"));
+        return;
+    }
+    if (destination == "security" && !player_.hasItem(ItemType::Keycard) && !player_.hidden()) {
+        drawBox("move", vector<string>(1, "security hub requires cover. hide first or carry a keycard"));
+        return;
+    }
+    if (destination == "clocktower" && player_.room() == "library" && !libraryClue_) {
+        drawBox("move", vector<string>(1, "you have not decoded the library margin note to find that stairwell"));
         return;
     }
     if (destination == "rooftop" && player_.room() == "archive" && !player_.hasItem(ItemType::RooftopKey)) {
@@ -439,6 +462,10 @@ void Game::movePlayer(const string& target) {
     }
     if (destination == "rooftop" && player_.room() == "bridge" && !player_.hasItem(ItemType::Screwdriver)) {
         drawBox("move", vector<string>(1, "the maintenance panel is bolted shut. you need a screwdriver."));
+        return;
+    }
+    if (destination == "rooftop" && player_.room() == "clocktower" && !player_.hasItem(ItemType::Keycard)) {
+        drawBox("move", vector<string>(1, "the clocktower gate is magnetically locked. a keycard is required."));
         return;
     }
     bool wasHidden = player_.hidden();
@@ -470,22 +497,22 @@ void Game::searchRoom() {
     vector<string> lines;
     player_.incrementSearches();
 
-    if (room->id == "corridor" || room->id == "commons") {
+    if (room->id == "corridor" || room->id == "commons" || room->id == "canteen") {
         if (!player_.hasItem(ItemType::HallPass) && rand() % 2 == 0) {
             player_.addItem(ItemType::HallPass);
             lines.push_back("you found a forged hall pass.");
         }
-    } else if (room->id == "faculty") {
+    } else if (room->id == "faculty" || room->id == "security") {
         if (libraryClue_ && !player_.hasItem(ItemType::Keycard)) {
             player_.addItem(ItemType::Keycard);
-            lines.push_back("you found an admin keycard using the library clue.");
+            lines.push_back("you found an admin keycard after matching the library clue with staff records.");
         }
     } else if (room->id == "lab") {
         if (!player_.hasItem(ItemType::Screwdriver)) {
             player_.addItem(ItemType::Screwdriver);
             lines.push_back("you picked up a flathead screwdriver.");
         }
-    } else if (room->id == "admin" || room->id == "archive") {
+    } else if (room->id == "admin" || room->id == "archive" || room->id == "tunnel") {
         if (player_.itemCount(ItemType::CodeFragment) < codeFragmentsNeeded_) {
             player_.addItem(ItemType::CodeFragment);
             lines.push_back("you uncovered a code fragment.");
@@ -506,6 +533,12 @@ void Game::searchRoom() {
             adminRoute_ = true;
             lines.push_back("you trace the route into the archive");
         } else lines.push_back("you already know the archive route");
+    } else if (room->id == "tunnel") {
+        if (player_.hasItem(ItemType::Screwdriver)) lines.push_back("you map a hidden tunnel bypass into the archive wing");
+        else lines.push_back("you can hear airflow behind a sealed hatch, but cannot open it yet");
+    } else if (room->id == "clocktower") {
+        if (libraryClue_) lines.push_back("the tower stair can serve as a high-risk rooftop route");
+        else lines.push_back("the stair controls are encoded in a library catalog reference");
     } else if (room->id == "archive") {
         if (!adminRoute_) lines.push_back("you are not ready to search the archive");
         else if (!folder_) {
