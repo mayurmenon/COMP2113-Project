@@ -1,7 +1,7 @@
 CXX = g++
 CXXFLAGS = -pedantic-errors -Wall -Wextra -std=c++11 -Iinclude
 TARGET = loopbreak
-OBJS = main.o game.o map.o room.o player.o save.o utils.o item.o
+OBJS = main.o game.o map.o room.o player.o save.o utils.o item.o journal.o event.o npc.o
 
 .PHONY: all run clean
 
@@ -33,6 +33,15 @@ utils.o: src/utils.cpp include/utils.h
 
 item.o: src/item.cpp include/item.h
 	$(CXX) $(CXXFLAGS) -c src/item.cpp -o item.o
+
+journal.o: src/journal.cpp include/journal.h
+	$(CXX) $(CXXFLAGS) -c src/journal.cpp -o journal.o
+
+event.o: src/event.cpp include/event.h
+	$(CXX) $(CXXFLAGS) -c src/event.cpp -o event.o
+
+npc.o: src/npc.cpp include/npc.h
+	$(CXX) $(CXXFLAGS) -c src/npc.cpp -o npc.o
 
 run: $(TARGET)
 	./$(TARGET)
