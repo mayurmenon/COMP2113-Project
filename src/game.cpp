@@ -248,6 +248,8 @@ void Game::showRoom() const {
     if (!hint.empty()) lines.push_back("hint   : " + hint);
     vector<string> dossier = map_.roomDossier(room->id);
     if (!dossier.empty()) lines.push_back("brief  : " + dossier[(loopNumber_ + currentMinutes_ / 25) % dossier.size()]);
+    vector<string> strategy = map_.routeStrategy(room->id, context);
+    if (!strategy.empty()) lines.push_back("route  : " + strategy[(loopNumber_ + currentMinutes_ / 18) % strategy.size()]);
     lines.push_back("");
     lines.push_back("paths  : " + map_.exitsOf(room->id, context));
     lines.push_back("details: " + Utils::join(room->searchables, ", "));
@@ -306,6 +308,10 @@ void Game::showObjective() const {
     if (routes.empty()) lines.push_back("escape routes: none unlocked yet");
     else lines.push_back("escape routes: " + Utils::join(routes, ", "));
     lines.push_back("progress stage: " + map_.progressionSummary(context, folder_));
+    vector<string> sector = map_.sectorBriefing(context, folder_);
+    for (int i = 0; i < (int)sector.size(); i++) lines.push_back(sector[i]);
+    vector<string> checklist = map_.heistChecklist(context, folder_);
+    for (int i = 0; i < (int)checklist.size(); i++) lines.push_back(checklist[i]);
     drawBox("objective", lines);
 }
 void Game::showInventory() const {
@@ -456,7 +462,6 @@ void Game::movePlayer(const string& target) {
     player_.incrementMoves();
     if (room && room->restricted) {
         if (player_.hasItem(ItemType::Keycard)) {
-            // keycard avoids penalty
         } else {
             int rise = difficulty_ == Difficulty::Hard ? 14 : difficulty_ == Difficulty::Easy ? 8 : 11;
             if (wasHidden) rise -= 3;

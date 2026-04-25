@@ -510,6 +510,96 @@ vector<string> CampusMap::roomDossier(const string& roomId) const {
     }
     return notes;
 }
+vector<string> CampusMap::routeStrategy(const string& roomId, const MovementContext& context) const {
+    vector<string> notes;
+    if (roomId == "library") {
+        notes.push_back(context.libraryClue ? "clue confirmed; clocktower route is now theoretically reachable" : "priority: search here until clue is secured");
+        notes.push_back(context.adminRoute ? "admin route already unlocked; library now serves as fallback transit" : "without clue, admin records are difficult to interpret");
+        notes.push_back(context.hasKeycard ? "keycard in hand; faculty/security transitions are safer" : "no keycard yet; avoid overcommitting to restricted loops");
+    } else if (roomId == "lab") {
+        notes.push_back(context.hasScrewdriver ? "tool acquired; hidden tunnel and bridge shaft become viable" : "screwdriver missing; hidden routes remain locked");
+        notes.push_back(context.adminRoute ? "direct objective route available, but tunnel still offers pressure relief" : "use lab as setup while admin route is unresolved");
+        notes.push_back("lab is best used as a short stop, not a long loiter point");
+    } else if (roomId == "admin") {
+        notes.push_back(context.adminRoute ? "archive door protocol decoded; direct approach now permitted" : "search records to unlock archive path");
+        notes.push_back(context.hasKeycard ? "restricted penalties reduced by keycard support" : "no keycard; suspicion can spike quickly here");
+        notes.push_back(context.hasScrewdriver ? "tunnel fallback available if front route gets hot" : "tunnel fallback unavailable without screwdriver");
+    } else if (roomId == "archive") {
+        notes.push_back(context.hasRooftopKey ? "archive stair to rooftop is unlocked" : "need code fragments to convert objective into clean rooftop route");
+        notes.push_back(context.hasScrewdriver ? "bridge/tunnel alternates can support emergency extraction" : "no tool-based alternate routes from archive pressure");
+        notes.push_back(context.hasKeycard ? "clocktower backup can complement archive routeing" : "clocktower backup still locked by credential requirement");
+    } else if (roomId == "bridge") {
+        notes.push_back(context.hasScrewdriver ? "maintenance shaft route online for fast extraction" : "maintenance shaft locked; bridge is currently transit only");
+        notes.push_back(context.hasRooftopKey ? "archive and bridge both offer rooftop convergence options" : "consider bridge as primary only if archive key is not ready");
+        notes.push_back("bridge is speed-oriented and should be used decisively");
+    } else if (roomId == "clocktower") {
+        notes.push_back(context.libraryClue ? "service stair located from library intel" : "clocktower entry remains hidden until clue discovery");
+        notes.push_back(context.hasKeycard ? "gate can be opened; route is viable" : "magnetic gate remains sealed without keycard");
+        notes.push_back("clocktower route trades speed for controlled exposure");
+    } else if (roomId == "security") {
+        notes.push_back((context.hasKeycard || context.hidden) ? "entry condition met; use this access quickly" : "entry denied unless hidden or carrying keycard");
+        notes.push_back(context.hasKeycard ? "keycard grants cleaner navigation through hub connectors" : "without keycard, security stay should be minimal");
+        notes.push_back("security is optional but can rebalance difficult mid-run routes");
+    } else if (roomId == "tunnel") {
+        notes.push_back(context.hasScrewdriver ? "all tunnel hatches can be traversed" : "hatches remain locked without screwdriver");
+        notes.push_back(context.adminRoute ? "tunnel now functions as alternate archive ingress/egress" : "tunnel is useful prep, but admin objective still unresolved");
+        notes.push_back("tunnel rewards planning and punishes indecision");
+    } else {
+        notes.push_back("maintain low suspicion while chaining objective dependencies");
+        notes.push_back("prefer routes with clear unlock state before committing");
+        notes.push_back("keep at least one alternate extraction branch in reserve");
+    }
+    return notes;
+}
+vector<string> CampusMap::sectorBriefing(const MovementContext& context, bool hasFolder) const {
+    vector<string> lines;
+    lines.push_back("public sector: corridor/library/commons/quad/canteen remain best for low-risk setup");
+    lines.push_back(string("restricted sector: ") + (context.hasKeycard ? "keycard-assisted traversal available" : "high suspicion exposure expected"));
+    lines.push_back(string("hidden sector: ") + (context.hasScrewdriver ? "tunnel and bridge shaft unlocked" : "tool-lock active on hidden routes"));
+    lines.push_back(string("tower sector: ") + (context.libraryClue ? "clocktower location known" : "clocktower location still obscured"));
+    lines.push_back(string("archive sector: ") + (context.adminRoute ? "route protocol unlocked" : "admin route gate still active"));
+    vector<string> escape = availableEscapeRoutes(context);
+    if (escape.empty()) lines.push_back("extraction sector: no rooftop route currently unlocked");
+    else lines.push_back("extraction sector: " + Utils::join(escape, ", "));
+    lines.push_back(string("objective state: ") + (hasFolder ? "folder secured, prioritize extraction" : "folder not secured yet"));
+    return lines;
+}
+vector<string> CampusMap::heistChecklist(const MovementContext& context, bool hasFolder) const {
+    vector<string> list;
+    list.push_back(string(context.libraryClue ? "[x] " : "[ ] ") + "obtain library clue and decode hidden references");
+    list.push_back(string(context.adminRoute ? "[x] " : "[ ] ") + "unlock archive route protocol from admin records");
+    list.push_back(string(context.hasScrewdriver ? "[x] " : "[ ] ") + "secure screwdriver to enable hidden mechanical routes");
+    list.push_back(string(context.hasKeycard ? "[x] " : "[ ] ") + "acquire keycard for restricted-zone control");
+    list.push_back(string(context.hasRooftopKey ? "[x] " : "[ ] ") + "assemble code access and retrieve rooftop key");
+    list.push_back(string(hasFolder ? "[x] " : "[ ] ") + "retrieve sealed folder from archive objective");
+
+    vector<string> routes = availableEscapeRoutes(context);
+    if (routes.empty()) {
+        list.push_back("[ ] unlock at least one rooftop extraction route");
+    } else if ((int)routes.size() == 1) {
+        list.push_back("[x] unlock at least one rooftop extraction route");
+        list.push_back("[ ] optional: unlock a second extraction fallback route");
+    } else {
+        list.push_back("[x] unlock at least one rooftop extraction route");
+        list.push_back("[x] optional: unlock a second extraction fallback route");
+    }
+
+    bool preparedForFinal = context.libraryClue && context.adminRoute && hasFolder && !routes.empty();
+    list.push_back(string(preparedForFinal ? "[x] " : "[ ] ") + "finalize heist chain: clue -> route -> folder -> extraction");
+
+    if (!context.libraryClue) {
+        list.push_back("next focus: stay in public wing and search library until clue appears");
+    } else if (!context.adminRoute) {
+        list.push_back("next focus: enter admin and secure archive route confirmation");
+    } else if (!hasFolder) {
+        list.push_back("next focus: approach archive with low suspicion and collect objective");
+    } else if (routes.empty()) {
+        list.push_back("next focus: unlock any rooftop path before risk resets the loop");
+    } else {
+        list.push_back("next focus: execute extraction via your safest unlocked rooftop route");
+    }
+    return list;
+}
 string CampusMap::layout() const {
     return "Campus map\n"
            "[dorm]\n"

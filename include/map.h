@@ -46,6 +46,12 @@ public:
     string progressionSummary(const MovementContext& context, bool hasFolder) const;
     // Returns room-specific progression dossier notes.
     vector<string> roomDossier(const string& roomId) const;
+    // Returns room-specific route strategy notes based on progression state.
+    vector<string> routeStrategy(const string& roomId, const MovementContext& context) const;
+    // Returns a map-wide tactical briefing by sector.
+    vector<string> sectorBriefing(const MovementContext& context, bool hasFolder) const;
+    // Returns a dynamic heist checklist from map progression state.
+    vector<string> heistChecklist(const MovementContext& context, bool hasFolder) const;
     // Returns the map layout as text. Input: none. Output: map string.
     string layout() const;
 private:
