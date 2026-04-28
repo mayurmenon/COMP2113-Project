@@ -411,8 +411,9 @@ vector<string> CampusMap::availableEscapeRoutes(const MovementContext& context) 
     return routes;
 }
 string CampusMap::progressionSummary(const MovementContext& context, bool hasFolder) const {
-    if (!context.libraryClue) return "stage 1: gather intelligence in public academic zones";
-    if (!context.adminRoute) return "stage 2: decode admin route access to archive wing";
+    if (!context.libraryClue && !context.hasScrewdriver) return "stage 1: gather intelligence and tools in public academic zones";
+    if (!context.adminRoute && !context.hasScrewdriver) return "stage 2: decode admin route access to archive wing";
+    if (!context.adminRoute && context.hasScrewdriver && !hasFolder) return "stage 2: hidden maintenance path can bypass standard archive access";
     if (!hasFolder) return "stage 3: penetrate archive and retrieve sealed objective";
     vector<string> routes = availableEscapeRoutes(context);
     if (routes.empty()) return "stage 4: objective secured, but no rooftop route unlocked";

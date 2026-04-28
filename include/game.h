@@ -2,6 +2,7 @@
 #define GAME_H
 #include <string>
 #include <vector>
+#include "event.h"
 #include "map.h"
 #include "player.h"
 #include "item.h"
@@ -50,11 +51,15 @@ private:
 
     map<ItemType, Item> itemTable_;
     int codeFragmentsNeeded_;
+    vector<game_event> events_;
+    string lastEvent_;
 
     // Resets the loop state. Input: keepProgress flag and reset reason. Output: none.
     void resetLoop(bool keepProgress, const string& reason);
     // Returns the time limit for the current difficulty. Input: none. Output: end time in minutes.
     int dayEnd() const;
+    // Returns the helper difficulty index for side systems. Input: none. Output: 0, 1, or 2.
+    int difficultyIndex() const;
     // Clears the terminal screen. Input: none. Output: none.
     void clearScreen() const;
     // Draws a framed panel of text. Input: title and body lines. Output: none.
@@ -92,6 +97,8 @@ private:
     void showObjective() const;
     // Shows current inventory items and descriptions. Input: none. Output: none.
     void showInventory() const;
+    // Shows the latest random event and active disruptions. Input: none. Output: none.
+    void showEvent() const;
     // Parses and runs one command. Input: raw user command. Output: none.
     void handle(const string& input);
     // Move player logic
