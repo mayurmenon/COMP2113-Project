@@ -11,6 +11,16 @@ Difficulty parseDifficulty(const string& text) {
     if (lowered == "hard") return Difficulty::Hard;
     return Difficulty::Normal;
 }
+// Parses one integer save value safely. Input: text and fallback. Output: parsed integer.
+int parseIntOr(const string& text, int fallback) {
+    try {
+        size_t used = 0;
+        int value = stoi(text, &used);
+        return used == text.size() ? value : fallback;
+    } catch (...) {
+        return fallback;
+    }
+}
 }
 bool SaveSystem::save(const Game& game, const string& path) {
     ofstream out(path.c_str());
@@ -29,6 +39,8 @@ bool SaveSystem::save(const Game& game, const string& path) {
     out << "searches=" << game.player().totalSearches() << '\n';
     out << "itemsused=" << game.player().itemsUsed() << '\n';
     out << "inventory=" << game.player().inventoryAsString() << '\n';
+    out << "lastevent=" << game.latestEvent() << '\n';
+    out << "events=" << game.eventState() << '\n';
     return true;
 }
 bool SaveSystem::load(Game& game, const string& path) {
@@ -48,23 +60,27 @@ bool SaveSystem::load(Game& game, const string& path) {
     int searches = 0;
     int itemsUsed = 0;
     string inventory = "";
+    string latestEvent = "save loaded";
+    string eventData = "";
     string line;
     while (getline(in, line)) {
         if (line.rfind("difficulty=", 0) == 0) difficulty = line.substr(11);
-        else if (line.rfind("loop=", 0) == 0) loopNumber = stoi(line.substr(5));
-        else if (line.rfind("time=", 0) == 0) time = stoi(line.substr(5));
+        else if (line.rfind("loop=", 0) == 0) loopNumber = parseIntOr(line.substr(5), loopNumber);
+        else if (line.rfind("time=", 0) == 0) time = parseIntOr(line.substr(5), time);
         else if (line.rfind("room=", 0) == 0) room = line.substr(5);
-        else if (line.rfind("suspicion=", 0) == 0) suspicion = stoi(line.substr(10));
+        else if (line.rfind("suspicion=", 0) == 0) suspicion = parseIntOr(line.substr(10), suspicion);
         else if (line.rfind("library=", 0) == 0) library = line.substr(8) == "1";
         else if (line.rfind("admin=", 0) == 0) admin = line.substr(6) == "1";
         else if (line.rfind("folder=", 0) == 0) folder = line.substr(7) == "1";
-        else if (line.rfind("codefragments=", 0) == 0) codeFragments = stoi(line.substr(14));
-        else if (line.rfind("hidestreak=", 0) == 0) hideStreak = stoi(line.substr(11));
-        else if (line.rfind("moves=", 0) == 0) moves = stoi(line.substr(6));
-        else if (line.rfind("searches=", 0) == 0) searches = stoi(line.substr(9));
-        else if (line.rfind("itemsused=", 0) == 0) itemsUsed = stoi(line.substr(10));
+        else if (line.rfind("codefragments=", 0) == 0) codeFragments = parseIntOr(line.substr(14), codeFragments);
+        else if (line.rfind("hidestreak=", 0) == 0) hideStreak = parseIntOr(line.substr(11), hideStreak);
+        else if (line.rfind("moves=", 0) == 0) moves = parseIntOr(line.substr(6), moves);
+        else if (line.rfind("searches=", 0) == 0) searches = parseIntOr(line.substr(9), searches);
+        else if (line.rfind("itemsused=", 0) == 0) itemsUsed = parseIntOr(line.substr(10), itemsUsed);
         else if (line.rfind("inventory=", 0) == 0) inventory = line.substr(10);
+        else if (line.rfind("lastevent=", 0) == 0) latestEvent = line.substr(10);
+        else if (line.rfind("events=", 0) == 0) eventData = line.substr(7);
     }
-    game.loadState(time, parseDifficulty(difficulty), room, suspicion, library, admin, folder, loopNumber, inventory, hideStreak, moves, searches, itemsUsed, codeFragments);
+    game.loadState(time, parseDifficulty(difficulty), room, suspicion, library, admin, folder, loopNumber, inventory, hideStreak, moves, searches, itemsUsed, codeFragments, eventData, latestEvent);
     return true;
 }

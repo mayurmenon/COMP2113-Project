@@ -63,41 +63,41 @@ struct NPC {
     int suspicion_per_tick;
 };
 
-// Returns the room ID where the NPC is at the given time.
+// Returns the room where the NPC should be now. Input: NPC data and current minute. Output: room id.
 string npc_room_at_time(const NPC& npc, int minute);
 
-// Updates the NPC's current room based on schedule and time.
+// Updates one NPC to the correct scheduled room. Input: NPC data and current minute. Output: none.
 void npc_update_room(NPC& npc, int minute);
 
-// Checks if the NPC can detect the player in the same room.
+// Checks whether the NPC can currently see the player. Input: NPC data, player room, and hidden flag. Output: true or false.
 bool npc_detects_player(const NPC& npc, const string& player_room, bool player_hidden);
 
-// Updates NPC alert level and returns suspicion change.
+// Advances NPC detection state for one tick. Input: NPC data, player room, and hidden flag. Output: suspicion change.
 int npc_detection_tick(NPC& npc, const string& player_room, bool player_hidden);
 
-// Resets the NPC's alert level back to idle.
+// Resets one NPC back to calm state. Input: NPC data. Output: none.
 void npc_clear_alert(NPC& npc);
 
-// Returns a list of dialogue options available for this NPC.
+// Returns the dialogue lines currently available. Input: NPC data and loop count. Output: dialogue indices.
 vector<int> npc_get_available_dialogues(const NPC& npc, int loop_counter);
 
-// Handles NPC dialogue interaction and returns suspicion change.
+// Runs one dialogue choice. Input: NPC data, dialogue index, and clue output text. Output: suspicion change.
 int npc_interact(NPC& npc, int dialogue_index, string& clue_out);
 
-// Creates and returns a librarian NPC with difficulty-based stats.
+// Creates the librarian NPC. Input: difficulty index. Output: NPC data.
 NPC create_librarian(int difficulty);
-// Creates and returns a janitor NPC with difficulty-based stats.
+// Creates the janitor NPC. Input: difficulty index. Output: NPC data.
 NPC create_janitor(int difficulty);
-// Creates and returns a prefect NPC with difficulty-based stats.
+// Creates the prefect NPC. Input: difficulty index. Output: NPC data.
 NPC create_prefect(int difficulty);
-// Creates and returns a TA NPC with difficulty-based stats.
+// Creates the teaching assistant NPC. Input: difficulty index. Output: NPC data.
 NPC create_TA(int difficulty);
-// Creates and returns an admin NPC with difficulty-based stats.
+// Creates the admin NPC. Input: difficulty index. Output: NPC data.
 NPC create_admin(int difficulty);
-// Creates and returns a guard NPC with difficulty-based stats.
+// Creates the guard NPC. Input: difficulty index. Output: NPC data.
 NPC create_guard(int difficulty);
 
-// Resets NPC state for the next gameplay loop.
+// Resets one NPC for a fresh loop. Input: NPC data. Output: none.
 void npc_reset_for_loop(NPC& npc);
 
 #endif // NPC_H

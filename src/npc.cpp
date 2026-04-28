@@ -36,9 +36,14 @@ bool npc_detects_player(const NPC& npc, const string& player_room, bool player_h
 int npc_detection_tick(NPC& npc, const string& player_room, bool player_hidden) {
     // Handle the NPC's suspicion mechanics each turn
     if (!npc_detects_player(npc, player_room, player_hidden)) {
-        npc.alert_timer--;
-        if (npc.alert_timer <= 0) {
-            npc.alert_level--;
+        if (npc.alert_level > alert_idle) {
+            npc.alert_timer--;
+            if (npc.alert_timer <= 0) {
+                npc.alert_level--;
+                npc.alert_timer = 3;
+            }
+        } else {
+            npc.alert_level = alert_idle;
             npc.alert_timer = 3;
         }
         return 0;
@@ -85,6 +90,9 @@ static bool condition_met(const NPC& npc, const dialogue_line& line, int loop_co
     if (line.condition == "has_clue") {
         return npc.has_clue;
     }
+    if (line.condition == "clue_ready") {
+        return npc.has_clue;
+    }
     if (line.condition == "suspicious") {
         return npc.alert_level >= alert_curious;
     }
@@ -113,7 +121,7 @@ int npc_interact(NPC& npc, int dialogue_index, string& clue_out) {
     if (dialogue_index < 0 || dialogue_index >= (int)npc.dialogue_lines.size()) {
         return 0;
     }
-    dialogue_line& line = npc.dialogue_lines[dialogue_index];
+    const dialogue_line& line = npc.dialogue_lines[dialogue_index];
 
     if (line.gives_clue && npc.has_clue) {
         clue_out = npc.clue_text;
@@ -172,7 +180,7 @@ NPC create_librarian(int difficulty) {
     n.clue_text = "The archive room code changes every week. Check the noticeboard near the admin office.";
 
     schedule_entry s1 = {0, 240, "library"};
-    schedule_entry s2 = {240, 300, "chi_wah"};
+    schedule_entry s2 = {240, 300, "commons"};
     schedule_entry s3 = {300, 600, "library"};
     n.schedule.push_back(s1);
     n.schedule.push_back(s2);
@@ -198,15 +206,15 @@ NPC create_janitor(int difficulty) {
     n.has_clue = true;
     n.clue_text = "The service corridor behind the science lab is never locked after 9pm.";
     
-    schedule_entry s1 = {0, 120, "main_corridor"};
-    schedule_entry s2 = {120, 300, "science_lab"};
-    schedule_entry s3 = {300, 480, "admin_office"};
-    schedule_entry s4 = {480, 600, "main_corridor"};
+    schedule_entry s1 = {0, 120, "corridor"};
+    schedule_entry s2 = {120, 300, "lab"};
+    schedule_entry s3 = {300, 480, "admin"};
+    schedule_entry s4 = {480, 600, "corridor"};
     n.schedule.push_back(s1);
     n.schedule.push_back(s2);
     n.schedule.push_back(s3);
     n.schedule.push_back(s4);
-    n.current_room = "main_corridor";
+    n.current_room = "corridor";
 
     dialogue_line greet = {"Just doing my rounds, nothing to see here.", "always", false, 0};
     dialogue_line hint = {"Between you and me, I leave a door open...", "clue_ready", true, 0};
@@ -227,13 +235,13 @@ NPC create_prefect(int difficulty) {
     n.has_clue = false;
     n.clue_text = "";
 
-    schedule_entry s1 = {0, 180, "main_corridor"};
-    schedule_entry s2 = {180, 360, "faculty_corridor"};
-    schedule_entry s3 = {360, 600, "main_corridor"};
+    schedule_entry s1 = {0, 180, "corridor"};
+    schedule_entry s2 = {180, 360, "faculty"};
+    schedule_entry s3 = {360, 600, "corridor"};
     n.schedule.push_back(s1);
     n.schedule.push_back(s2);
     n.schedule.push_back(s3);
-    n.current_room = "main_corridor";
+    n.current_room = "corridor";
 
     dialogue_line greet = {"Keep it moving.","always", false, 0};
     dialogue_line sus = {"Do you have a pass for this area?","suspicious", false, 4};
@@ -252,13 +260,13 @@ NPC create_TA(int difficulty) {
     n.has_clue = true;
     n.clue_text = "Prof. Wong's TA access card is kept in the top drawer of the lab bench.";
 
-    schedule_entry s1 = {60, 240, "lecture_hall"};
-    schedule_entry s2 = {240, 420, "science_lab"};
-    schedule_entry s3 = {420, 600, "chi_wah"};
+    schedule_entry s1 = {60, 240, "lecture"};
+    schedule_entry s2 = {240, 420, "lab"};
+    schedule_entry s3 = {420, 600, "commons"};
     n.schedule.push_back(s1);
     n.schedule.push_back(s2);
     n.schedule.push_back(s3);
-    n.current_room = "lecture_hall";
+    n.current_room = "lecture";
 
     dialogue_line greet = {"Office hours are over, sorry.", "always",false,  0};
     dialogue_line hint = {"Actually... I probably shouldn't say this.", "clue_ready", true,  -2};
@@ -279,13 +287,13 @@ NPC create_admin(int difficulty) {
     n.has_clue = true;
     n.clue_text = "The archive request form number is stamped on the folder in Room 301.";
 
-    schedule_entry s1 = {60, 300, "admin_office"};
-    schedule_entry s2 = {300, 360, "main_corridor"};
-    schedule_entry s3 = {360, 540, "admin_office"};
+    schedule_entry s1 = {60, 300, "admin"};
+    schedule_entry s2 = {300, 360, "corridor"};
+    schedule_entry s3 = {360, 540, "admin"};
     n.schedule.push_back(s1);
     n.schedule.push_back(s2);
     n.schedule.push_back(s3);
-    n.current_room = "admin_office";
+    n.current_room = "admin";
 
     dialogue_line greet = {"The office is closed to students.", "always", false, 2};
     dialogue_line hint = {"Fine, I'll tell you what I know.","clue_ready", true, 0};
@@ -306,13 +314,13 @@ NPC create_guard(int difficulty) {
     n.has_clue = true;
     n.clue_text = "Camera 3 goes offline every night around 10pm for about five minutes.";
 
-    schedule_entry s1 = {0, 200, "security_room"};
-    schedule_entry s2 = {200, 400, "main_corridor"};
-    schedule_entry s3 = {400, 600, "security_room"};
+    schedule_entry s1 = {0, 200, "security"};
+    schedule_entry s2 = {200, 400, "corridor"};
+    schedule_entry s3 = {400, 600, "security"};
     n.schedule.push_back(s1);
     n.schedule.push_back(s2);
     n.schedule.push_back(s3);
-    n.current_room = "security_room";
+    n.current_room = "security";
 
     dialogue_line greet = {"Campus is closing soon.","always",false,  0};
     dialogue_line hint = {"Between you and me, the cameras aren't perfect.", "clue_ready", true,   0};
@@ -325,10 +333,10 @@ NPC create_guard(int difficulty) {
     return n;
 }
 
-void npc_reset(NPC& npc) {
+void npc_reset_for_loop(NPC& npc) {
     // Reset the NPC for a new loop iteration
     npc.alert_level = alert_idle;
     npc.alert_timer = 0;
     npc.dialogue_progress = dialogue_none;
-    npc.has_clue = true;
+    npc.has_clue = !npc.clue_text.empty();
 }

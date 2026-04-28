@@ -1,6 +1,20 @@
 #include "player.h"
 #include <sstream>
 using namespace std;
+namespace {
+// Parses an inventory count from save data. Input: text. Output: positive count or 0.
+int parseInventoryCount(const string& text) {
+    try {
+        size_t used = 0;
+        int value = stoi(text, &used);
+        if (used != text.size() || value < 1) return 0;
+        if (value > 99) return 99;
+        return value;
+    } catch (...) {
+        return 0;
+    }
+}
+}
 Player::Player() { reset(); }
 void Player::reset() {
     roomId_ = "dorm";
@@ -140,9 +154,9 @@ void Player::loadInventoryFromString(const string& data) {
         size_t colon = token.find(':');
         if (colon != string::npos) {
             string tag = token.substr(0, colon);
-            int count = stoi(token.substr(colon + 1));
+            int count = parseInventoryCount(token.substr(colon + 1));
             ItemType type;
-            if (tagToItemType(tag, type)) {
+            if (count > 0 && tagToItemType(tag, type)) {
                 inventory_[type] = count;
             }
         }

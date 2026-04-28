@@ -5,10 +5,7 @@
 #include <vector>
 using namespace std;
 
-// ============================================================
-// ItemType — enumerates every collectible item in the game.
-// Each value maps to one unique item the player can find.
-// ============================================================
+// Lists every collectible item type used by the game.
 enum class ItemType {
     HallPass,       // single-use pass that lowers suspicion
     Keycard,        // bypasses restricted-room suspicion penalty
@@ -17,11 +14,7 @@ enum class ItemType {
     RooftopKey      // opens the rooftop stair door cleanly
 };
 
-// ============================================================
-// Item — holds the static data for one item definition.
-// Fields describe the item for display, usage rules, and
-// the suspicion change that happens when the item is used.
-// ============================================================
+// Stores the fixed data for one item definition.
 struct Item {
     ItemType    type;             // which item this is
     string      name;             // display name shown to the player
@@ -57,10 +50,6 @@ struct Item {
           consumable(itemConsumable),
           suspicionEffect(itemSuspicionEffect) {}
 };
-
-// ============================================================
-// Free-standing helper functions for the item system.
-// ============================================================
 
 // Creates and returns the master item-definition table.
 // Input: none.

@@ -32,19 +32,19 @@ struct game_event {
     int ticks_remaining;
 };
 
-// Creates and returns the list of all events for the difficulty level.
+// Builds the full event list for one difficulty. Input: difficulty index. Output: event vector.
 vector<game_event> create_event_list(int difficulty);
 
-// Checks if any events should be triggered at the current time.
-void event_check_trigger(vector<game_event>& events, int current_minute);
+// Tries to trigger inactive events at the current loop minute. Input: event list and minute since loop start. Output: none.
+void event_check_trigger(vector<game_event>& events, int loop_minute);
 
-// Decrements the duration of active events.
-void events_tick(vector<game_event>& events);
+// Counts down active events and closes expired ones. Input: event list and elapsed minutes. Output: none.
+void events_tick(vector<game_event>& events, int minutes_elapsed);
 
-// Returns a list of currently active events.
-vector<game_event*> get_active_events_for_room(const vector<game_event>& events);
+// Returns pointers to the events that are active now. Input: event list. Output: active-event pointers.
+vector<game_event*> get_active_events_for_room(vector<game_event>& events);
 
-// Resets all events for the next gameplay loop.
+// Resets every event for a fresh loop. Input: event list. Output: none.
 void events_reset_for_loop(vector<game_event>& events);
 
 #endif // EVENT_H

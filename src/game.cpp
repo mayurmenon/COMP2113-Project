@@ -12,16 +12,16 @@ using namespace std;
 namespace {
 // Stores the terminal color codes used by the UI. Input: none. Output: none.
 const string resetColor = "\033[0m";
-const string mainColor = "\033[38;5;120m";
-const string brightColor = "\033[1;92m";
-const string dimColor = "\033[2;32m";
+const string mainColor = "\033[38;5;253m";
+const string brightColor = "\033[1;38;5;120m";
+const string dividerColor = "\033[38;5;250m";
 const string cyanColor = "\033[38;5;81m";
 const string blueColor = "\033[38;5;75m";
 const string goldColor = "\033[38;5;221m";
 const string amberColor = "\033[38;5;215m";
 const string roseColor = "\033[38;5;204m";
 const string redColor = "\033[38;5;203m";
-const string silverColor = "\033[38;5;152m";
+const string silverColor = "\033[38;5;188m";
 const string whiteColor = "\033[1;97m";
 const int panelWidth = 78;
 // Repeats one character many times. Input: character and count. Output: repeated text.
@@ -42,6 +42,22 @@ int parseMinutes(const string& text, int fallback) {
         return fallback;
     }
 }
+// Keeps a number inside a valid range. Input: value and bounds. Output: clamped value.
+int clampInt(int value, int low, int high) {
+    if (value < low) return low;
+    if (value > high) return high;
+    return value;
+}
+// Reads an integer without letting corrupt save data throw. Input: text and fallback. Output: parsed value.
+int parseSavedInt(const string& text, int fallback) {
+    try {
+        size_t used = 0;
+        int value = stoi(text, &used);
+        return used == text.size() ? value : fallback;
+    } catch (...) {
+        return fallback;
+    }
+}
 // Splits a block of text into lines. Input: text block. Output: vector of lines.
 vector<string> splitLines(const string& text) {
     vector<string> lines;
@@ -58,7 +74,30 @@ bool hasActiveEvent(const vector<game_event>& events, const string& id) {
     }
     return false;
 }
+// Restores event status records from a save string. Input: event list and serialized state. Output: none.
+void applyEventState(vector<game_event>& events, const string& data) {
+    if (data.empty()) return;
+    stringstream stream(data);
+    string token;
+    while (getline(stream, token, ',')) {
+        size_t first = token.find(':');
+        size_t second = first == string::npos ? string::npos : token.find(':', first + 1);
+        if (first == string::npos || second == string::npos) continue;
+        string id = token.substr(0, first);
+        int status = clampInt(parseSavedInt(token.substr(first + 1, second - first - 1), event_inactive), event_inactive, event_done);
+        int ticks = parseSavedInt(token.substr(second + 1), 0);
+        for (int index = 0; index < (int) events.size(); index++) {
+            if (events[index].id == id) {
+                events[index].status = status;
+                events[index].ticks_remaining = clampInt(ticks, 0, events[index].duration);
+                if (events[index].status != event_active) events[index].ticks_remaining = 0;
+                if (events[index].status == event_active && events[index].ticks_remaining == 0) events[index].status = event_done;
+            }
+        }
+    }
+}
 string tint(const string& text, const string& color) { return color + text + mainColor; }
+string pulse(const string& text, const string& color) { return color + "[" + text + "]" + mainColor; }
 string roomTone(const string& roomId) {
     if (roomId == "archive" || roomId == "security") return roseColor;
     if (roomId == "faculty" || roomId == "admin" || roomId == "clocktower") return amberColor;
@@ -70,9 +109,9 @@ string roomTone(const string& roomId) {
 string panelTone(const string& title) {
     string key = lowerText(title);
     if (key == "loopbreak" || key == "main menu" || key == "difficulty") return goldColor;
-    if (key == "status" || key == "map") return cyanColor;
-    if (key == "current page" || key == "journal") return blueColor;
-    if (key == "inventory" || key == "objective") return amberColor;
+    if (key == "status" || key == "map" || key == "focus") return cyanColor;
+    if (key == "current page" || key == "current room" || key == "night briefing" || key == "journal") return blueColor;
+    if (key == "inventory" || key == "objective" || key == "easy guide") return amberColor;
     if (key == "event" || key == "you win") return roseColor;
     if (key == "help" || key == "how to play" || key == "command deck") return whiteColor;
     return brightColor;
@@ -166,15 +205,36 @@ vector<string> wrapLines(const vector<string>& lines, int width) {
     if (wrapped.empty()) wrapped.push_back("");
     return wrapped;
 }
+// Adds wrapped text while keeping a panel concise. Input: output list, text, width, line limit. Output: none.
+void appendWrappedLimited(vector<string>& lines, const string& text, int width, int maxLines) {
+    vector<string> wrapped = wrapText(text, width);
+    for (int index = 0; index < (int) wrapped.size() && index < maxLines; index++) {
+        lines.push_back(wrapped[index]);
+    }
+}
+// Builds a colored section heading. Input: title and color. Output: heading text.
+string sectionHeading(const string& title, const string& color) {
+    return tint(title, color);
+}
 vector<string> labelBlock(const string& label, const string& text, int width) {
     vector<string> block;
     int labelWidth = 10;
     int bodyWidth = width - labelWidth;
     if (bodyWidth < 8) bodyWidth = width;
-    vector<string> wrapped = wrapText(text.empty() ? "-" : text, bodyWidth);
-    for (int index = 0; index < (int) wrapped.size(); index++) {
-        if (index == 0) block.push_back(padRight(label, labelWidth) + wrapped[index]);
-        else block.push_back(repeatChar(' ', labelWidth) + wrapped[index]);
+    vector<string> rawLines = splitLines(text.empty() ? "-" : text);
+    bool firstLine = true;
+    for (int index = 0; index < (int) rawLines.size(); index++) {
+        vector<string> wrapped;
+        if (rawLines[index].empty()) wrapped.push_back("");
+        else wrapped = wrapText(rawLines[index], bodyWidth);
+        for (int part = 0; part < (int) wrapped.size(); part++) {
+            if (firstLine) {
+                block.push_back(padRight(label, labelWidth) + wrapped[part]);
+                firstLine = false;
+            } else {
+                block.push_back(repeatChar(' ', labelWidth) + wrapped[part]);
+            }
+        }
     }
     return block;
 }
@@ -184,14 +244,9 @@ vector<string> mergeColumns(const vector<string>& left, const vector<string>& ri
     for (int index = 0; index < total; index++) {
         string leftText = index < (int) left.size() ? left[index] : "";
         string rightText = index < (int) right.size() ? right[index] : "";
-        rows.push_back(padRight(leftText, leftWidth) + tint(" | ", dimColor) + padRight(rightText, rightWidth));
+        rows.push_back(padRight(leftText, leftWidth) + tint(" | ", dividerColor) + padRight(rightText, rightWidth));
     }
     return rows;
-}
-vector<string> tintBlock(const vector<string>& lines, const string& color) {
-    vector<string> painted;
-    for (int index = 0; index < (int) lines.size(); index++) painted.push_back(tint(lines[index], color));
-    return painted;
 }
 string tickBar(int value, int maxValue, int width, char filled, char empty) {
     if (maxValue <= 0) return repeatChar(empty, width);
@@ -223,132 +278,48 @@ string minuteWindow(int currentMinutes, int endMinutes) {
 }
 string normalizeRoomTarget(const string& text) {
     string room = lowerText(text);
-    if (room == "residence" || room == "room") return "dorm";
-    if (room == "main corridor" || room == "hall") return "corridor";
-    if (room == "lecture hall" || room == "classroom") return "lecture";
-    if (room == "learning commons" || room == "common room") return "commons";
-    if (room == "science lab") return "lab";
-    if (room == "faculty corridor") return "faculty";
-    if (room == "admin office" || room == "office") return "admin";
-    if (room == "archive room") return "archive";
-    if (room == "central quad") return "quad";
-    if (room == "late-night canteen") return "canteen";
-    if (room == "sports hall") return "gym";
-    if (room == "security hub") return "security";
-    if (room == "service tunnel") return "tunnel";
-    if (room == "footbridge") return "bridge";
-    if (room == "clocktower stairwell" || room == "tower") return "clocktower";
-    if (room == "roof") return "rooftop";
+    if (room == "residence" || room == "room" || room == "hall room" || room == "swire hall" || room == "swire hall room") return "dorm";
+    if (room == "main corridor" || room == "hall" || room == "university street" || room == "street") return "corridor";
+    if (room == "lecture hall" || room == "classroom" || room == "grand hall" || room == "grand hall foyer") return "lecture";
+    if (room == "library" || room == "main library") return "library";
+    if (room == "learning commons" || room == "common room" || room == "chi wah" || room == "chi wah learning commons") return "commons";
+    if (room == "science lab" || room == "kadoorie" || room == "kadoorie biological sciences building" || room == "kadoorie lab") return "lab";
+    if (room == "faculty corridor" || room == "main building corridor") return "faculty";
+    if (room == "admin office" || room == "office" || room == "main building office" || room == "registry office") return "admin";
+    if (room == "archive room" || room == "records room" || room == "main building records room") return "archive";
+    if (room == "central quad" || room == "courtyard" || room == "centennial courtyard" || room == "centennial campus courtyard") return "quad";
+    if (room == "late-night canteen" || room == "canteen" || room == "cafe 330" || room == "composite building cafe") return "canteen";
+    if (room == "sports hall" || room == "sports centre" || room == "stanley ho sports centre") return "gym";
+    if (room == "security hub" || room == "security office" || room == "east gate security office") return "security";
+    if (room == "service tunnel" || room == "centennial service tunnel" || room == "maintenance tunnel") return "tunnel";
+    if (room == "footbridge" || room == "university street footbridge" || room == "bridge") return "bridge";
+    if (room == "clocktower stairwell" || room == "tower" || room == "clock tower" || room == "main building clock tower") return "clocktower";
+    if (room == "roof" || room == "main building rooftop") return "rooftop";
     return room;
 }
-string nextObjectiveHint(const MovementContext& context, bool hasFolder) {
-    if (!context.libraryClue && !context.hasScrewdriver) return "search the library for a clue or the lab for a tool";
-    if (!context.libraryClue) return "search the library before pushing deeper";
-    if (!context.adminRoute && !context.hasScrewdriver && !context.hasKeycard) return "use the clue to unlock admin, or prepare an alternate route";
-    if (!hasFolder) return "reach the archive and secure the sealed folder";
-    if (context.hasRooftopKey) return "head for the archive stair and extract";
-    if (context.hasScrewdriver) return "head for the bridge shaft and extract";
-    if (context.libraryClue && context.hasKeycard) return "head for the clocktower stair and extract";
-    return "unlock any rooftop route before the loop collapses";
-}
-vector<string> roomArt(const string& roomId) {
-    if (roomId == "dorm") return vector<string>{
-        "   ____________       ",
-        "  /  ____     /|      ",
-        " /__/___/____/ |      ",
-        " |  desk   | | |      ",
-        " |_________|/ /       ",
-        "    loop start        "};
-    if (roomId == "library") return vector<string>{
-        "   _________________  ",
-        "  ||_|_|_|_|_|_|_|_|  ",
-        "  ||_|_|_|_|_|_|_|_|  ",
-        "  ||_|_|_|_|_|_|_|_|  ",
-        "  || reserve shelf || ",
-        "  '----------------'  "};
-    if (roomId == "lab") return vector<string>{
-        "      __              ",
-        "     / /\\_            ",
-        "    /_/ /_            ",
-        "    \\ \\ \\_\\           ",
-        "     \\_\\/ /           ",
-        "   hatch + tools      "};
-    if (roomId == "admin") return vector<string>{
-        "   .------------.     ",
-        "   | FILE | LED |     ",
-        "   |------|-----|     ",
-        "   |route |pass |     ",
-        "   |______|_____|     ",
-        "   records in play    "};
-    if (roomId == "archive") return vector<string>{
-        "   __________________ ",
-        "  | [] [] [] [] []  | ",
-        "  | [] [] [] [] []  | ",
-        "  | [] sealed folder |",
-        "  |__________________|",
-        "   code lock nearby   "};
-    if (roomId == "tunnel") return vector<string>{
-        "   =================  ",
-        "  //  pipe  pipe  \\\\ ",
-        " ||   grate  hatch  ||",
-        "  \\\\______________// ",
-        "   damp echo below   ",
-        "   hidden route      "};
-    if (roomId == "bridge") return vector<string>{
-        "      ______________  ",
-        " ____/____________/|  ",
-        "|____  ____  ____| |  ",
-        "     |/    \\/    | |  ",
-        "     / maintenance|/  ",
-        "      exposed path    "};
-    if (roomId == "clocktower") return vector<string>{
-        "        /\\            ",
-        "       /  \\           ",
-        "      /_[]_\\          ",
-        "      | [] |          ",
-        "      | || |          ",
-        "      tower stair     "};
-    if (roomId == "security") return vector<string>{
-        "   .----------------. ",
-        "   | []  []  []  [] | ",
-        "   | monitor wall   | ",
-        "   | alert terminal | ",
-        "   '----------------' ",
-        "    full watch zone   "};
-    if (roomId == "rooftop") return vector<string>{
-        "        _^_           ",
-        "   _   /___\\   _      ",
-        " _|_|_|_|_|_|_|_|_    ",
-        " |  skyline break  |  ",
-        " |_________________|  ",
-        "    final escape      "};
-    return vector<string>{
-        "    ______________    ",
-        "   |   campus wing |  ",
-        "   |  doors lights |  ",
-        "   |  routes notes |  ",
-        "   |_______________|  ",
-        "    room signal       "};
-}
-vector<string> commandDeck() {
-    vector<string> left;
-    left.push_back("CORE");
-    left.push_back("look        search      wait 10");
-    left.push_back("move room   hide        use item");
-    left.push_back("");
-    left.push_back("INTEL");
-    left.push_back("status      journal     objective");
-    left.push_back("inventory   map         event");
-
-    vector<string> right;
-    right.push_back("SESSION");
-    right.push_back("save        load        menu");
-    right.push_back("help        quit");
-    right.push_back("");
-    right.push_back("SHORTCUTS");
-    right.push_back("move admin   wait 20   use hall pass");
-    right.push_back("inventory    event     look");
-    return mergeColumns(left, right, 34, 37);
+vector<string> commandDeck(Difficulty difficulty, int stage) {
+    vector<string> lines;
+    if (stage == 0) lines.push_back(tint("FOCUS", goldColor) + "   reach the Main Library and search for the first clue");
+    else if (stage == 1) lines.push_back(tint("FOCUS", goldColor) + "   turn the clue into a Main Building route");
+    else if (stage == 2) lines.push_back(tint("FOCUS", goldColor) + "   prepare one clean archive entry and exit");
+    else lines.push_back(tint("FOCUS", goldColor) + "   finish the file -> roof escape chain");
+    lines.push_back("");
+    lines.push_back(tint("CORE", cyanColor) + "    look, move <room>, search");
+    if (stage == 0) {
+        lines.push_back(tint("SAVE", blueColor) + "    save, load");
+        lines.push_back(tint("MORE", whiteColor) + "    objective, status, help, menu, quit");
+    } else if (stage == 1) {
+        lines.push_back(tint("STEALTH", roseColor) + " hide, wait 10");
+        lines.push_back(tint("MORE", whiteColor) + "    inventory, map, objective, save, load");
+    } else if (stage == 2) {
+        lines.push_back(tint("STEALTH", roseColor) + " hide, wait 10, use hall pass");
+        lines.push_back(tint("MORE", whiteColor) + "    journal, map, event, save, load");
+    } else {
+        lines.push_back(tint("TOOLS", amberColor) + "   use <item>, hide, wait 10");
+        lines.push_back(tint("MORE", whiteColor) + "    journal, map, event, save, load");
+    }
+    if (difficulty == Difficulty::Hard) lines.push_back(tint("MODE", amberColor) + "    hard: fewer hints");
+    return lines;
 }
 }
 Game::Game()
@@ -361,11 +332,13 @@ Game::Game()
       libraryClue_(false),
       adminRoute_(false),
       folder_(false),
+      showTutorialNext_(true),
+      events_(new vector<game_event>),
       lastEvent_("quiet campus") {
     srand(time(nullptr));
     itemTable_ = createItemTable();
     codeFragmentsNeeded_ = (rand() % 3) + 1;
-    events_ = create_event_list(difficultyIndex());
+    *events_ = create_event_list(difficultyIndex());
 }
 void Game::start() {
     while (!quit_) {
@@ -394,27 +367,30 @@ void Game::start() {
         }
     }
 }
-void Game::loadState(int minutes, Difficulty difficulty, const string& roomId, int suspicion, bool libraryClue, bool adminRoute, bool folder, int loopNumber, const string& inventoryData, int hideStreak, int totalMoves, int totalSearches, int itemsUsed, int codeFragmentsNeeded) {
+void Game::loadState(int minutes, Difficulty difficulty, const string& roomId, int suspicion, bool libraryClue, bool adminRoute, bool folder, int loopNumber, const string& inventoryData, int hideStreak, int totalMoves, int totalSearches, int itemsUsed, int codeFragmentsNeeded, const string& eventData, const string& latestEvent) {
     difficulty_ = difficulty;
-    currentMinutes_ = minutes;
-    loopNumber_ = loopNumber;
+    currentMinutes_ = clampInt(minutes, 480, dayEnd() - 1);
+    loopNumber_ = clampInt(loopNumber, 1, 9999);
     libraryClue_ = libraryClue;
     adminRoute_ = adminRoute;
     folder_ = folder;
     running_ = true;
     won_ = false;
+    showTutorialNext_ = false;
     player_.reset();
-    codeFragmentsNeeded_ = codeFragmentsNeeded;
-    events_ = create_event_list(difficultyIndex());
-    lastEvent_ = "save loaded";
+    codeFragmentsNeeded_ = clampInt(codeFragmentsNeeded, 1, 3);
+    *events_ = create_event_list(difficultyIndex());
+    applyEventState(*events_, eventData);
+    lastEvent_ = latestEvent.empty() ? "save loaded" : latestEvent;
     if (map_.get(roomId)) player_.moveTo(roomId);
     player_.setSuspicion(suspicion);
     player_.loadInventoryFromString(inventoryData);
+    hideStreak = clampInt(hideStreak, 0, 3);
     for (int i = 0; i < hideStreak; i++) player_.incrementHideStreak();
     if (hideStreak > 0) player_.setHidden(true);
-    for (int i = 0; i < totalMoves; i++) player_.incrementMoves();
-    for (int i = 0; i < totalSearches; i++) player_.incrementSearches();
-    for (int i = 0; i < itemsUsed; i++) player_.incrementItemsUsed();
+    for (int i = 0; i < clampInt(totalMoves, 0, 9999); i++) player_.incrementMoves();
+    for (int i = 0; i < clampInt(totalSearches, 0, 9999); i++) player_.incrementSearches();
+    for (int i = 0; i < clampInt(itemsUsed, 0, 9999); i++) player_.incrementItemsUsed();
 }
 int Game::currentMinutes() const { return currentMinutes_; }
 int Game::loopNumber() const { return loopNumber_; }
@@ -429,6 +405,15 @@ bool Game::libraryClue() const { return libraryClue_; }
 bool Game::adminRoute() const { return adminRoute_; }
 bool Game::folder() const { return folder_; }
 int Game::codeFragmentsNeeded() const { return codeFragmentsNeeded_; }
+string Game::eventState() const {
+    ostringstream out;
+    for (int index = 0; index < (int) events_->size(); index++) {
+        if (index > 0) out << ",";
+        out << (*events_)[index].id << ":" << (*events_)[index].status << ":" << (*events_)[index].ticks_remaining;
+    }
+    return out.str();
+}
+const string& Game::latestEvent() const { return lastEvent_; }
 void Game::resetLoop(bool keepProgress, const string& reason) {
     if (keepProgress) loopNumber_++;
     else {
@@ -440,10 +425,11 @@ void Game::resetLoop(bool keepProgress, const string& reason) {
     currentMinutes_ = 480;
     player_.reset();
     codeFragmentsNeeded_ = (rand() % 3) + 1;
-    events_ = create_event_list(difficultyIndex());
+    *events_ = create_event_list(difficultyIndex());
     lastEvent_ = "quiet campus";
     running_ = true;
     won_ = false;
+    showTutorialNext_ = true;
     if (!reason.empty()) {
         clearScreen();
         drawBox("loop reset", vector<string>{reason, "time returns to 08:00", "loop " + to_string(loopNumber_)});
@@ -502,30 +488,30 @@ void Game::showTitle() const {
     lines.push_back(centerText(tint("|_____\\___/ \\___/| .__/| .__/  |_.__/|_|  \\___|\\__,_|_|\\_\\", roseColor), 74));
     lines.push_back(centerText(tint("                 |_|   |_|                                   ", amberColor), 74));
     lines.push_back("");
-    lines.push_back(centerText(tint("campus loop console // stealth, route, reset, escape", silverColor), 74));
-    lines.push_back(centerText(tint("every run starts in the dorm. one good run ends on the roof.", silverColor), 74));
+    lines.push_back(centerText(tint("HKU after hours // route, hide, learn, escape", silverColor), 74));
+    lines.push_back(centerText(tint("start small, read the campus, and break the loop one layer at a time.", silverColor), 74));
     drawBox("loopbreak", lines);
 }
 void Game::showMenu() const {
     drawBox("main menu", vector<string>{
-        "[1] new game      start a fresh loop from the dorm",
+        "[1] new game      start a fresh HKU night run",
         "[2] load game     continue from savegame.txt",
-        "[3] how to play   view the mission and command guide",
+        "[3] how to play   view the route and command guide",
         "[4] quit          leave the terminal"});
 }
 void Game::showAbout() const {
     vector<string> lines;
-    lines.push_back("mission");
-    lines.push_back("find the library clue, confirm the archive route, take the sealed folder, and reach the rooftop before the day collapses.");
+    lines.push_back("story");
+    lines.push_back("You wake in your hall room after another failed night at HKU. A sealed file is still moving around campus, and this time you want to reach the roof with it before the loop snaps back.");
     lines.push_back("");
-    lines.push_back("loop rules");
-    lines.push_back("time and suspicion can reset the day. clue progress stays with you, but each run still needs a clean route.");
+    lines.push_back("early game");
+    lines.push_back("Start with the Main Library and Chi Wah Learning Commons. The game opens up after you learn the route and find your first useful item.");
     lines.push_back("");
     lines.push_back("routes");
-    lines.push_back("archive stair is direct, bridge shaft is fast, and clocktower stair is risky.");
+    lines.push_back("Main Library -> Main Building office -> records room is the cleanest path. Kadoorie, the service tunnel, the clock tower, and the footbridge become important later.");
     lines.push_back("");
-    lines.push_back("tools");
-    lines.push_back("hall pass helps cool suspicion. other key items work automatically when the route needs them.");
+    lines.push_back("difficulty");
+    lines.push_back("Easy gives clear early hints. Normal gives lighter nudges. Hard mostly leaves the reading of the campus to you.");
     lines.push_back("");
     lines.push_back("commands");
     lines.push_back("look, move, search, hide, wait, use, inventory, status, map, journal, objective, event, save, load, menu, quit");
@@ -542,14 +528,94 @@ void Game::chooseDifficulty() {
     else if (Utils::trim(choice) == "3") difficulty_ = Difficulty::Hard;
     else difficulty_ = Difficulty::Normal;
 }
+void Game::showTutorial() {
+    int total = difficulty_ == Difficulty::Easy ? 4 : difficulty_ == Difficulty::Normal ? 3 : 2;
+    for (int step = 1; step <= total; step++) {
+        clearScreen();
+        showHud();
+        showRoom();
+        drawBox("command deck", commandDeck(difficulty_, onboardingStage()));
+        showTutorialStep(step, total);
+        cout << prompt("tutorial");
+        string input;
+        getline(cin, input);
+        string command = lowerText(input);
+        if (command == "skip") break;
+        if (command == "save") {
+            drawBox("save", vector<string>(1, SaveSystem::save(*this) ? "game saved" : "save failed"));
+            pause();
+        } else if (command == "load") {
+            bool loaded = SaveSystem::load(*this);
+            drawBox("load", vector<string>(1, loaded ? "game loaded" : "savegame.txt was not found"));
+            pause();
+            if (loaded) return;
+        } else if (command == "menu") {
+            running_ = false;
+            return;
+        } else if (command == "quit" || command == "exit") {
+            running_ = false;
+            quit_ = true;
+            return;
+        }
+    }
+}
+void Game::showTutorialStep(int step, int total) const {
+    vector<string> lines;
+    if (step == 1) {
+        lines.push_back("This screen is your whole run.");
+        lines.push_back("Left side: where you are, what the room feels like, where you can go, and what you can search.");
+        lines.push_back("Right side: time, goals, items, and event notes.");
+        if (difficulty_ == Difficulty::Easy) lines.push_back("The separate easy guide panel below gives the current best next step.");
+        lines.push_back("");
+        lines.push_back("Start with " + pulse("move <room>", goldColor) + ", " + pulse("search", cyanColor) + ", and " + pulse("look", whiteColor) + ".");
+        lines.push_back("Press Enter to continue, or type " + pulse("skip", amberColor) + " if you already know the basics.");
+    } else if (step == 2) {
+        lines.push_back("To win a run, build the chain in order:");
+        lines.push_back("Main Library clue -> Main Building route -> sealed file -> rooftop escape.");
+        lines.push_back("");
+        lines.push_back(pulse("objective", goldColor) + " shows the route checklist.");
+        lines.push_back(pulse("status", cyanColor) + " shows time, suspicion, and your pace.");
+        lines.push_back("If suspicion reaches 100 or the day ends, the loop resets.");
+    } else if (step == 3) {
+        lines.push_back("Later systems unlock after the run opens up.");
+        lines.push_back("Do not worry about everything at once.");
+        lines.push_back("");
+        lines.push_back(pulse("inventory", whiteColor) + " shows what you carry.");
+        lines.push_back(pulse("journal", cyanColor) + " keeps route notes.");
+        lines.push_back(pulse("event", amberColor) + " shows active campus events.");
+        lines.push_back(pulse("use <item>", goldColor) + " matters more in the mid and late game.");
+    } else {
+        lines.push_back("Hint style depends on difficulty.");
+        if (difficulty_ == Difficulty::Easy) {
+            lines.push_back("Easy mode gives exact early help like " + pulse("move corridor", goldColor) + ", " + pulse("move library", cyanColor) + ", and " + pulse("search", whiteColor) + ".");
+            lines.push_back("After you understand the route, those hints fade and you take over.");
+        } else if (difficulty_ == Difficulty::Normal) {
+            lines.push_back("Normal mode points you in the right direction, but expects you to read the campus yourself.");
+        } else {
+            lines.push_back("Hard mode only gives a light opening nudge. After that, your own notes matter most.");
+        }
+        lines.push_back("When in doubt, return to public rooms, lower suspicion, and rebuild the route one step at a time.");
+    }
+    drawBox("tutorial " + to_string(step) + "/" + to_string(total), lines);
+}
+void Game::showGuide() const {
+    vector<string> lines = easyGuideLines();
+    if (lines.empty()) return;
+    drawBox("easy guide", lines);
+}
 void Game::playLoop() {
     running_ = true;
     won_ = false;
     while (running_ && !won_ && !quit_) {
+        if (showTutorialNext_) {
+            showTutorial();
+            showTutorialNext_ = false;
+        }
         clearScreen();
         showHud();
         showRoom();
-        drawBox("command deck", commandDeck());
+        if (difficulty_ == Difficulty::Easy) showGuide();
+        drawBox("command deck", commandDeck(difficulty_, onboardingStage()));
         cout << prompt(player_.room());
         string input;
         if (!getline(cin, input)) {
@@ -566,118 +632,92 @@ void Game::playLoop() {
     }
 }
 void Game::showHud() const {
-    vector<string> left;
-    left.push_back("TELEMETRY");
-    left.push_back("time      " + Utils::formatTime(currentMinutes_));
-    left.push_back("loop      " + to_string(loopNumber_));
-    left.push_back("mode      " + difficultyName());
-    left.push_back("cover     " + string(player_.hidden() ? "hidden" : "open"));
-    left.push_back("risk      " + player_.suspicionRiskLevel());
-    left.push_back("pressure  " + bar(player_.suspicion(), 100, 20) + " " + to_string(player_.suspicion()) + "/100");
-
-    vector<string> right;
-    right.push_back("MISSION FEED");
-    right.push_back("room      " + player_.room());
-    right.push_back("clue      " + string(libraryClue_ ? "secured" : "missing"));
-    right.push_back("route     " + string(adminRoute_ ? "mapped" : "unknown"));
-    right.push_back("folder    " + string(folder_ ? "in hand" : "not taken"));
-    right.push_back("progress  " + map_.progressionSummary(movementContext(), folder_));
-    right.push_back("event     " + lastEvent_);
-
-    vector<string> lines = mergeColumns(left, right, 34, 37);
+    vector<string> lines;
+    string hint = activeHint();
+    if (hint.empty()) hint = map_.progressionSummary(movementContext(), folder_);
+    lines.push_back(sectionHeading("NEXT FOCUS", goldColor));
+    appendWrappedLimited(lines, hint, 72, 2);
     lines.push_back("");
-    lines.push_back("dayline   " + timeRibbon(currentMinutes_, dayEnd(), 50));
-    lines.push_back("window    " + minuteWindow(currentMinutes_, dayEnd()));
-    drawBox("status", lines);
+    lines.push_back(sectionHeading("SNAPSHOT", cyanColor));
+    lines.push_back("time " + Utils::formatTime(currentMinutes_) + " / risk " + player_.suspicionRiskLevel() + " / place " + player_.room());
+    if (lastEvent_ != "quiet campus") {
+        lines.push_back("");
+        lines.push_back(sectionHeading("CAMPUS EVENT", roseColor));
+        appendWrappedLimited(lines, lastEvent_, 72, 1);
+    }
+    drawBox("focus", lines);
 }
 void Game::showRoom() const {
     const Room* room = map_.get(player_.room());
     if (!room) return;
     MovementContext context = movementContext();
     vector<string> left;
-    left.push_back(tint(room->name, roomTone(room->id)));
+    left.push_back(sectionHeading("LOCATION", roomTone(room->id)));
+    left.push_back(tint(room->name, roomTone(room->id)) + " [" + room->id + "]");
     left.push_back("");
-    vector<string> art = tintBlock(roomArt(room->id), roomTone(room->id));
-    left.insert(left.end(), art.begin(), art.end());
+    appendWrappedLimited(left, room->description, 46, 2);
     left.push_back("");
-    left.push_back(tint("zone      ", silverColor) + tint(room->restricted ? "restricted" : "public", room->restricted ? amberColor : cyanColor));
-    left.push_back(tint("threat    ", silverColor) + tint(room->threatProfile, room->restricted ? roseColor : whiteColor));
-    left.push_back(tint("patrol    ", silverColor) + tint(room->patrolLabel() + " (" + to_string(room->patrolIntensity) + "/4)", room->patrolIntensity >= 3 ? redColor : room->patrolIntensity == 2 ? amberColor : cyanColor));
 
-    vector<string> right;
-    right.push_back(tint("SCENE FILE", blueColor));
-    right.push_back("");
-    vector<string> description = wrapText(room->description, 37);
-    right.insert(right.end(), description.begin(), description.end());
-    right.push_back("");
-    string ambient = room->ambientFor(loopNumber_, currentMinutes_);
-    if (!ambient.empty()) {
-        vector<string> block = labelBlock("ambient", ambient, 47);
-        right.insert(right.end(), block.begin(), block.end());
-    }
-    string explore = room->explorationFor(loopNumber_, currentMinutes_);
-    if (!explore.empty()) {
-        vector<string> block = labelBlock("intel", explore, 47);
-        right.insert(right.end(), block.begin(), block.end());
-    }
-    string hint = room->progressionHintFor(loopNumber_, currentMinutes_);
-    if (!hint.empty()) {
-        vector<string> block = labelBlock("hint", hint, 47);
-        right.insert(right.end(), block.begin(), block.end());
-    }
-    vector<string> dossier = map_.roomDossier(room->id);
-    if (!dossier.empty()) {
-        vector<string> block = labelBlock("brief", dossier[(loopNumber_ + currentMinutes_ / 25) % dossier.size()], 47);
-        right.insert(right.end(), block.begin(), block.end());
-    }
-    vector<string> strategy = map_.routeStrategy(room->id, context);
-    if (!strategy.empty()) {
-        vector<string> block = labelBlock("route", strategy[(loopNumber_ + currentMinutes_ / 18) % strategy.size()], 47);
-        right.insert(right.end(), block.begin(), block.end());
-    }
+    left.push_back(sectionHeading("WHAT MATTERS HERE", amberColor));
+    string roomFocus = room->progressionHintFor(loopNumber_, currentMinutes_);
+    if (roomFocus.empty()) roomFocus = room->explorationFor(loopNumber_, currentMinutes_);
+    appendWrappedLimited(left, roomFocus.empty() ? "Use this room to keep the route moving." : roomFocus, 46, 2);
+    if (room->restricted) left.push_back(tint("warning  watched room: search quickly", roseColor));
+    else left.push_back(tint("safe     public room: good for planning", cyanColor));
+    left.push_back("");
 
-    vector<string> lines = mergeColumns(left, right, 24, 47);
-    lines.push_back("");
-    vector<string> footer = labelBlock("paths", map_.exitsOf(room->id, context), 74);
-    lines.insert(lines.end(), footer.begin(), footer.end());
-    footer = labelBlock("details", Utils::join(room->searchables, ", "), 74);
-    lines.insert(lines.end(), footer.begin(), footer.end());
-    drawBox("current page", lines);
+    left.push_back(sectionHeading("PATHS", blueColor));
+    string pathText = onboardingStage() <= 1 ? map_.exitsOf(room->id) : map_.exitsOf(room->id, context);
+    vector<string> block = labelBlock("move", pathText, 46);
+    left.insert(left.end(), block.begin(), block.end());
+    left.push_back("");
+    left.push_back(sectionHeading("ACTION", goldColor));
+    block = labelBlock("search", Utils::join(room->searchables, ", "), 46);
+    left.insert(left.end(), block.begin(), block.end());
+
+    vector<string> lines = mergeColumns(left, sidebarLines(), 46, 25);
+    drawBox("current room", lines);
 }
 void Game::showHelp() const {
-    vector<string> left;
-    left.push_back("MOVEMENT + ACTION");
-    left.push_back("look            redraw the current room page");
-    left.push_back("move archive    travel to a connected room");
-    left.push_back("search          check the room for clues or items");
-    left.push_back("hide            reduce heat if the room allows it");
-    left.push_back("wait 10         pass time and let the campus move");
-    left.push_back("use hall pass   apply an item when needed");
-
-    vector<string> right;
-    right.push_back("INTEL + SESSION");
-    right.push_back("status          show time, risk, and mission feed");
-    right.push_back("inventory       list the items you are carrying");
-    right.push_back("journal         show saved clue notes");
-    right.push_back("objective       show current progression stage");
-    right.push_back("event           check the latest disruption");
-    right.push_back("save / load     keep or restore the current run");
-    vector<string> lines = mergeColumns(left, right, 34, 37);
+    vector<string> lines;
+    lines.push_back("start with public rooms and short actions.");
     lines.push_back("");
-    lines.push_back("tip       commands accept natural input like 'move admin', 'wait 20', or 'use hall pass'.");
+    lines.push_back("look            redraw the main screen");
+    lines.push_back("move library    travel to a connected room");
+    lines.push_back("search          check the room for clues or items");
+    lines.push_back("objective       see the current route checklist");
+    lines.push_back("status          check time, risk, and your run stats");
+    lines.push_back("save / load     keep or restore a run");
+    if (onboardingStage() >= 1) {
+        lines.push_back("inventory       show all items in detail");
+        lines.push_back("map             show the campus graph");
+        lines.push_back("hide / wait 10  manage suspicion");
+    }
+    if (onboardingStage() >= 2) {
+        lines.push_back("use hall pass   spend your pass to cool suspicion");
+        lines.push_back("journal         check saved route notes");
+        lines.push_back("event           review active campus events");
+    }
+    lines.push_back("");
+    lines.push_back("You can type short room ids like 'move admin' or full names like 'move Main Library'.");
     drawBox("help", lines);
 }
 void Game::showMap() const {
     vector<string> lines = splitLines(map_.layout());
+    const Room* room = map_.get(player_.room());
     lines.push_back("");
-    lines.push_back("current room: " + player_.room());
-    lines.push_back("objective   : archive -> rooftop");
+    lines.push_back("you are here : " + string(room ? room->name + " [" + room->id + "]" : player_.room()));
+    lines.push_back("main route  : Main Library -> Main Building Office -> Main Building Records Room -> Main Building Rooftop");
+    if (onboardingStage() <= 1) lines.push_back("late routes : more routes open after your first clue and first useful item");
+    else lines.push_back("late routes : Kadoorie tunnel, footbridge shaft, and clock tower stair");
     drawBox("map", lines);
 }
 void Game::showStatus() const {
     int minutesLeft = dayEnd() - currentMinutes_;
     if (minutesLeft < 0) minutesLeft = 0;
     vector<string> lines;
+    const Room* room = map_.get(player_.room());
+    lines.push_back("location    " + string(room ? room->name : player_.room()));
     lines.push_back("time        " + Utils::formatTime(currentMinutes_));
     lines.push_back("time left   " + to_string(minutesLeft) + " minutes");
     lines.push_back("difficulty  " + difficultyName());
@@ -691,31 +731,33 @@ void Game::showStatus() const {
 }
 void Game::showJournal() const {
     vector<string> lines;
-    if (libraryClue_) lines.push_back("library note  the reserve shelf hides the first clue");
-    if (adminRoute_) lines.push_back("admin note    the archive path runs through the office wing");
-    if (player_.hasItem(ItemType::Screwdriver)) lines.push_back("lab note      screwdriver opens the bridge panel and tunnel hatch");
-    if (player_.hasItem(ItemType::Keycard)) lines.push_back("security note keycard softens heat in restricted corridors");
-    if (folder_) lines.push_back("current loop  the sealed folder is already with you");
+    if (libraryClue_) lines.push_back("main library   the margin note points away from the stacks and toward the Main Building records.");
+    if (adminRoute_) lines.push_back("main building  the office ledger maps the route into the records room.");
+    if (player_.hasItem(ItemType::Screwdriver)) lines.push_back("kadoorie       the screwdriver opens the service hatch and the footbridge panel.");
+    if (player_.hasItem(ItemType::Keycard)) lines.push_back("security       the keycard softens the pressure in watched rooms.");
+    if (player_.itemCount(ItemType::CodeFragment) > 0) lines.push_back("code trail     you have " + to_string(player_.itemCount(ItemType::CodeFragment)) + " code fragment(s) for the roof lock.");
+    if (folder_) lines.push_back("current loop   the sealed file is already with you.");
     if (lines.empty()) lines.push_back("no notes saved yet");
     drawBox("journal", lines);
 }
 void Game::showObjective() const {
     vector<string> lines;
     MovementContext context = movementContext();
-    lines.push_back(string(libraryClue_ ? "[x] " : "[ ] ") + "find the library clue");
-    lines.push_back(string(adminRoute_ ? "[x] " : "[ ] ") + "find the admin route");
-    lines.push_back(string(player_.hasItem(ItemType::Screwdriver) ? "[x] " : "[ ] ") + "secure a tool for hidden routes");
-    lines.push_back(string(folder_ ? "[x] " : "[ ] ") + "take the folder");
+    lines.push_back(string(libraryClue_ ? "[x] " : "[ ] ") + "read the Main Library clue");
+    lines.push_back(string(adminRoute_ ? "[x] " : "[ ] ") + "map the Main Building records route");
+    lines.push_back(string(player_.hasItem(ItemType::Screwdriver) ? "[x] " : "[ ] ") + "secure a tool for hidden HKU routes");
+    lines.push_back(string(folder_ ? "[x] " : "[ ] ") + "take the sealed file");
     lines.push_back(string(folder_ && player_.room() == "rooftop" ? "[x] " : "[ ] ") + "reach the rooftop");
     if (player_.itemCount(ItemType::CodeFragment) > 0 || player_.hasItem(ItemType::RooftopKey)) {
         int count = player_.itemCount(ItemType::CodeFragment);
-        lines.push_back(string(count >= codeFragmentsNeeded_ ? "[x] " : "[ ] ") + "collect code fragments (" + to_string(count) + "/" + to_string(codeFragmentsNeeded_) + ")");
+        lines.push_back(string(count >= codeFragmentsNeeded_ ? "[x] " : "[ ] ") + "collect roof code fragments (" + to_string(count) + "/" + to_string(codeFragmentsNeeded_) + ")");
     }
     vector<string> routes = map_.availableEscapeRoutes(context);
     if (routes.empty()) lines.push_back("escape routes: none unlocked yet");
     else lines.push_back("escape routes: " + Utils::join(routes, ", "));
     lines.push_back("progress stage: " + map_.progressionSummary(context, folder_));
-    lines.push_back("next step: " + nextObjectiveHint(context, folder_));
+    string hint = activeHint();
+    if (!hint.empty()) lines.push_back("hint: " + hint);
     drawBox("objective", lines);
 }
 void Game::showInventory() const {
@@ -744,9 +786,9 @@ void Game::showEvent() const {
     lines.push_back("latest event  " + lastEvent_);
     lines.push_back("");
     bool anyActive = false;
-    for (int index = 0; index < (int) events_.size(); index++) {
-        if (events_[index].status == event_active) {
-            lines.push_back("active        " + events_[index].description);
+    for (int index = 0; index < (int) events_->size(); index++) {
+        if ((*events_)[index].status == event_active) {
+            lines.push_back("active        " + (*events_)[index].description);
             anyActive = true;
         }
     }
@@ -759,8 +801,9 @@ void Game::useItem(const string& itemName) {
         drawBox("use", vector<string>{"what do you want to use?"});
         return;
     }
+    string normalizedItem = lowerText(itemName);
     ItemType type;
-    if (!itemNameToType(itemName, type)) {
+    if (!itemNameToType(normalizedItem, type)) {
         drawBox("use", vector<string>{"unknown item: " + itemName});
         return;
     }
@@ -852,7 +895,7 @@ void Game::movePlayer(const string& target) {
         drawBox("move", vector<string>{"that room does not exist", "from here: " + map_.exitsOf(player_.room(), movementContext())});
         return;
     }
-    if (destination == "rooftop" && hasActiveEvent(events_, "rain")) {
+    if (destination == "rooftop" && hasActiveEvent(*events_, "rain")) {
         drawBox("move", vector<string>(1, "the rooftop exit is closed by heavy rain right now"));
         return;
     }
@@ -870,8 +913,8 @@ void Game::movePlayer(const string& target) {
         int rise = difficulty_ == Difficulty::Hard ? 14 : difficulty_ == Difficulty::Easy ? 8 : 11;
         if (player_.hasItem(ItemType::Keycard)) rise -= 5;
         if (wasHidden) rise -= 3;
-        if (hasActiveEvent(events_, "power_dip")) rise -= 2;
-        if (hasActiveEvent(events_, "corridor_inspection")) rise += 2;
+        if (hasActiveEvent(*events_, "power_dip")) rise -= 2;
+        if (hasActiveEvent(*events_, "corridor_inspection")) rise += 2;
         if (rise < 1) rise = 1;
         player_.addSuspicion(rise);
     }
@@ -902,56 +945,56 @@ void Game::searchRoom() {
     if (room->id == "corridor" || room->id == "commons" || room->id == "canteen") {
         if (!player_.hasItem(ItemType::HallPass) && rand() % 2 == 0) {
             player_.addItem(ItemType::HallPass);
-            lines.push_back("you found a forged hall pass.");
+            lines.push_back("you spot a late-study pass tucked into a notice sleeve.");
         }
     } else if (room->id == "faculty" || room->id == "security") {
         if (libraryClue_ && !player_.hasItem(ItemType::Keycard)) {
             player_.addItem(ItemType::Keycard);
-            lines.push_back("you found an admin keycard after matching the library clue with staff records.");
+            lines.push_back("you match the library note to staff records and pocket a Main Building keycard.");
         }
     } else if (room->id == "lab") {
         if (!player_.hasItem(ItemType::Screwdriver)) {
             player_.addItem(ItemType::Screwdriver);
-            lines.push_back("you picked up a flathead screwdriver.");
+            lines.push_back("you borrow a flathead screwdriver from the Kadoorie tool bench.");
         }
     } else if (room->id == "admin" || room->id == "archive" || room->id == "tunnel") {
         if (player_.itemCount(ItemType::CodeFragment) < codeFragmentsNeeded_) {
             player_.addItem(ItemType::CodeFragment);
-            lines.push_back("you uncovered a code fragment.");
-        } else if (player_.room() == "archive" && player_.itemCount(ItemType::CodeFragment) >= codeFragmentsNeeded_ && !player_.hasItem(ItemType::RooftopKey)) {
+            lines.push_back("you copy down part of the Main Building roof code.");
+        } else if (player_.room() == "archive" && !player_.hasItem(ItemType::RooftopKey)) {
             player_.addItem(ItemType::RooftopKey);
-            lines.push_back("you cracked the code and obtained the rooftop key!");
+            lines.push_back("the full code lines up and releases the rooftop key from the locked tray.");
         }
     }
 
     if (room->id == "library") {
         if (!libraryClue_) {
             libraryClue_ = true;
-            lines.push_back("you find the first clue in the reserve shelf");
-        } else lines.push_back("the library confirms what you already know");
+            lines.push_back("a note in the Main Library links the sealed file to the Main Building records room.");
+        } else lines.push_back("the shelves and terminals only confirm the clue you already have.");
     } else if (room->id == "admin") {
-        if (!libraryClue_) lines.push_back("the files mean little without the library clue");
+        if (!libraryClue_) lines.push_back("the office papers make little sense without the Main Library clue.");
         else if (!adminRoute_) {
             adminRoute_ = true;
-            lines.push_back("you trace the route into the archive");
-        } else lines.push_back("you already know the archive route");
+            lines.push_back("the office ledger maps the way into the records room.");
+        } else lines.push_back("the office records only repeat the route you already mapped.");
     } else if (room->id == "tunnel") {
-        if (player_.hasItem(ItemType::Screwdriver)) lines.push_back("you map a hidden tunnel bypass into the archive wing");
-        else lines.push_back("you can hear airflow behind a sealed hatch, but cannot open it yet");
+        if (player_.hasItem(ItemType::Screwdriver)) lines.push_back("you trace the service line and learn where it rises into the records side.");
+        else lines.push_back("you hear airflow behind the sealed hatch, but it is still bolted shut.");
     } else if (room->id == "clocktower") {
-        if (libraryClue_) lines.push_back("the tower stair can serve as a high-risk rooftop route");
-        else lines.push_back("the stair controls are encoded in a library catalog reference");
+        if (libraryClue_) lines.push_back("the clue and the tower markings line up. This stair can reach the roof with the right access.");
+        else lines.push_back("the tower markings only make sense after the Main Library clue.");
     } else if (room->id == "archive") {
-        if (!archiveReady) lines.push_back("you are not ready to search the archive");
+        if (!archiveReady) lines.push_back("you are in the records room, but you still do not understand the route well enough to find the file.");
         else if (!folder_) {
             folder_ = true;
-            if (adminRoute_) lines.push_back("you secure the sealed folder");
-            else lines.push_back("your alternate route gets you inside and you secure the sealed folder");
-        } else lines.push_back("the folder is already with you");
-    } else lines.push_back("nothing important turns up here");
+            if (adminRoute_) lines.push_back("you pull the sealed file from the records tray and tuck it away.");
+            else lines.push_back("the hidden route gets you in, and you secure the sealed file before anyone comes through.");
+        } else lines.push_back("the sealed file is already with you.");
+    } else lines.push_back("nothing useful turns up here.");
     if (room->restricted) {
         player_.addSuspicion(4);
-        lines.push_back("staying here too long raises suspicion");
+        lines.push_back("searching in a watched room raises suspicion.");
     }
     drawBox("search", lines);
     checkReset();
@@ -985,6 +1028,187 @@ void Game::waitPlayer(int minutes) {
     drawBox("wait", lines);
     checkReset();
 }
+int Game::onboardingStage() const {
+    if (folder_ || player_.itemCount(ItemType::CodeFragment) > 0 || player_.hasItem(ItemType::RooftopKey) || player_.totalMoves() >= 14) return 3;
+    if (adminRoute_ || player_.hasItem(ItemType::Screwdriver) || player_.hasItem(ItemType::Keycard) || player_.totalSearches() >= 3) return 2;
+    if (libraryClue_ || player_.totalMoves() >= 3 || player_.totalSearches() >= 1) return 1;
+    return 0;
+}
+string Game::activeHint() const {
+    string room = player_.room();
+    int stage = onboardingStage();
+    if (difficulty_ != Difficulty::Hard && player_.suspicion() >= 75) {
+        if (difficulty_ == Difficulty::Easy) return "Your suspicion is high. Slow down, hide, wait, or use the hall pass before entering another watched room.";
+        return "Suspicion is climbing fast. Reset your pace before the next restricted room.";
+    }
+
+    if (difficulty_ == Difficulty::Hard) {
+        if (stage == 0 && player_.totalMoves() == 0) return "Start with the Main Library or Chi Wah. After that, read the campus for yourself.";
+        return "";
+    }
+
+    if (difficulty_ == Difficulty::Normal) {
+        if (stage == 0) return "The Main Library is the safest place to understand the route.";
+        if (stage == 1) return "The clue now points toward the Main Building office and the routes around University Street.";
+        if (stage == 2 && !folder_) return "You know the basics now. Prepare access and one exit before forcing the records room.";
+        return "";
+    }
+
+    if (stage == 0) {
+        if (room == "dorm") return "Try `move corridor`. University Street connects the early safe rooms.";
+        if (room == "corridor") return "Try `move library`. The Main Library starts the clean route.";
+        if (room == "library") return "Try `search`. The first clue is hidden in the Main Library.";
+        return "Stay in public rooms first. The Main Library is the cleanest opening move.";
+    }
+
+    if (stage == 1) {
+        if (room == "library") return "Try `move corridor`, then work toward Chi Wah Learning Commons.";
+        if (room == "corridor") return "Try `move commons`. Chi Wah is a calmer step before the Main Building office.";
+        if (room == "commons") return "Try `move admin`. The office records are the next key layer.";
+        if (room == "admin") return "Try `search`. The office ledger should map the records route.";
+        return "Follow the clue from the Main Library into Chi Wah and then the Main Building office.";
+    }
+
+    if (!folder_) {
+        if (room == "archive") return "You are at the records room. Search only when you are ready to leave quickly.";
+        if (player_.hasItem(ItemType::Screwdriver) && (room == "lab" || room == "tunnel")) return "The Kadoorie service route is ready if you want a cleaner way around the Main Building.";
+        if (player_.totalMoves() >= 10 || player_.totalSearches() >= 4) return "";
+        return "You know the shape of the run now. Focus on one way in and one way out.";
+    }
+
+    return "";
+}
+vector<string> Game::easyGuideLines() const {
+    vector<string> lines;
+    if (difficulty_ != Difficulty::Easy) return lines;
+
+    string room = player_.room();
+    int stage = onboardingStage();
+
+    if (player_.suspicion() >= 75) {
+        lines.push_back("next step   lower suspicion before you push deeper");
+        lines.push_back("try         hide, wait 10, or use hall pass");
+        lines.push_back("reason      one bad restricted move can reset the loop now");
+        return lines;
+    }
+
+    if (stage == 0) {
+        if (room == "dorm") {
+            lines.push_back("next command  move corridor");
+            lines.push_back("reason        University Street connects the safe opening rooms");
+            lines.push_back("after that    move library, then search");
+            return lines;
+        }
+        if (room == "corridor") {
+            lines.push_back("next command  move library");
+            lines.push_back("reason        the Main Library gives the first clue");
+            lines.push_back("after that    search");
+            return lines;
+        }
+        if (room == "library") {
+            lines.push_back("next command  search");
+            lines.push_back("reason        the Main Library clue starts the real route");
+            lines.push_back("after that    move corridor and head toward Chi Wah");
+            return lines;
+        }
+        lines.push_back("next focus   stay in public rooms and reach the Main Library");
+        return lines;
+    }
+
+    if (stage == 1) {
+        if (room == "library") {
+            lines.push_back("next command  move corridor");
+            lines.push_back("reason        you already have the clue, so it is time to move on");
+            lines.push_back("after that    move commons");
+            return lines;
+        }
+        if (room == "corridor") {
+            lines.push_back("next command  move commons");
+            lines.push_back("reason        Chi Wah is the calmer setup room before admin");
+            lines.push_back("after that    move admin");
+            return lines;
+        }
+        if (room == "commons") {
+            lines.push_back("next command  move admin");
+            lines.push_back("reason        the Main Building office maps the records-room route");
+            lines.push_back("after that    search");
+            return lines;
+        }
+        if (room == "admin") {
+            lines.push_back("next command  search");
+            lines.push_back("reason        the office ledger unlocks the records-room route");
+            lines.push_back("after that    prepare for archive");
+            return lines;
+        }
+        lines.push_back("next focus   follow the clue into Chi Wah and then the Main Building office");
+        return lines;
+    }
+
+    if (!folder_) {
+        if (room == "archive") {
+            lines.push_back("next command  search");
+            lines.push_back("reason        the sealed file and roof-code progress both come from here");
+            lines.push_back("warning       leave quickly after you get what you need");
+            return lines;
+        }
+        if (player_.hasItem(ItemType::Screwdriver) && room == "lab") {
+            lines.push_back("option        move tunnel");
+            lines.push_back("reason        the Kadoorie route now gives you a hidden way around the Main Building");
+            lines.push_back("or            keep using the Main Building office route if it feels safer");
+            return lines;
+        }
+        lines.push_back("focus        get into the records room with one clean exit in mind");
+        lines.push_back("good exits   roof stair, footbridge shaft, or clock tower");
+        return lines;
+    }
+
+    lines.push_back("focus        you have the file");
+    lines.push_back("next step    use the safest roof route you already unlocked");
+    lines.push_back("warning      do not stop to collect extra things now");
+    return lines;
+}
+vector<string> Game::sidebarLines() const {
+    vector<string> lines;
+    lines.push_back(sectionHeading("STATUS", cyanColor));
+    lines.push_back("time   " + Utils::formatTime(currentMinutes_));
+    lines.push_back("left   " + minuteWindow(currentMinutes_, dayEnd()));
+    lines.push_back("loop   " + to_string(loopNumber_) + " / " + difficultyName());
+    lines.push_back("risk   " + player_.suspicionRiskLevel());
+    lines.push_back("cover  " + string(player_.hidden() ? "hidden" : "open"));
+    lines.push_back("");
+
+    lines.push_back(sectionHeading("OBJECTIVE", goldColor));
+    if (!libraryClue_) lines.push_back("1 search library");
+    else if (!adminRoute_) lines.push_back("2 map admin route");
+    else if (!folder_) lines.push_back("3 take sealed file");
+    else lines.push_back("4 reach rooftop");
+    lines.push_back(string(libraryClue_ ? "[x] " : "[ ] ") + "clue");
+    lines.push_back(string(adminRoute_ ? "[x] " : "[ ] ") + "route");
+    lines.push_back(string(folder_ ? "[x] " : "[ ] ") + "file");
+    if (player_.itemCount(ItemType::CodeFragment) > 0 || player_.hasItem(ItemType::RooftopKey)) lines.push_back("code   " + to_string(player_.itemCount(ItemType::CodeFragment)) + "/" + to_string(codeFragmentsNeeded_));
+
+    vector<ItemType> items = player_.inventoryList();
+    if (!items.empty()) {
+        lines.push_back("");
+        lines.push_back(sectionHeading("ITEMS", amberColor));
+        for (int i = 0; i < (int) items.size(); i++) {
+            map<ItemType, Item>::const_iterator it = itemTable_.find(items[i]);
+            if (it != itemTable_.end()) {
+                string itemLine = it->second.name;
+                int count = player_.itemCount(items[i]);
+                if (count > 1) itemLine += " x" + to_string(count);
+                lines.push_back(itemLine);
+            }
+        }
+    }
+    if (lastEvent_ != "quiet campus") {
+        lines.push_back("");
+        lines.push_back(sectionHeading("EVENT", roseColor));
+        vector<string> eventBlock = wrapText(lastEvent_, 25);
+        lines.insert(lines.end(), eventBlock.begin(), eventBlock.end());
+    }
+    return lines;
+}
 bool Game::passTime(int minutes) {
     currentMinutes_ += minutes;
     player_.applySuspicionDecay(minutes);
@@ -992,14 +1216,14 @@ bool Game::passTime(int minutes) {
         resetLoop(true, "the day ends and the loop starts again");
         return false;
     }
-    event_check_trigger(events_, currentMinutes_);
-    for (int index = 0; index < (int) events_.size(); index++) {
-        if (events_[index].status == event_active && events_[index].ticks_remaining == events_[index].duration) {
-            lastEvent_ = events_[index].description;
-            if (events_[index].suspiciousness_change != 0) player_.addSuspicion(events_[index].suspiciousness_change);
+    events_tick(*events_, minutes);
+    event_check_trigger(*events_, currentMinutes_ - 480);
+    for (int index = 0; index < (int) events_->size(); index++) {
+        if ((*events_)[index].status == event_active && (*events_)[index].ticks_remaining == (*events_)[index].duration) {
+            lastEvent_ = (*events_)[index].description;
+            if ((*events_)[index].suspiciousness_change != 0) player_.addSuspicion((*events_)[index].suspiciousness_change);
         }
     }
-    events_tick(events_);
     return true;
 }
 void Game::checkReset() {

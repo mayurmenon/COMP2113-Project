@@ -42,11 +42,11 @@ public:
     void clearInventory();
 
     // --- Hiding System Improvements ---
-    // Increases the consecutive hide streak and returns the current effective reduction. Output: none.
+    // Increases the consecutive hide streak. Input: none. Output: none.
     void incrementHideStreak();
-    // Resets the hide streak to 0. Output: none.
+    // Resets the hide streak to 0. Input: none. Output: none.
     void resetHideStreak();
-    // Returns the suspicion reduction value based on current hide streak. Output: suspicion reduction amount.
+    // Returns the suspicion reduction value based on current hide streak. Input: none. Output: suspicion reduction amount.
     int hideEffectiveness() const;
     // Checks if hiding is allowed in a specific room type (e.g. not rooftop). Input: room id. Output: true/false.
     bool canHideInRoom(const string& roomId) const;
@@ -54,22 +54,29 @@ public:
     // --- Suspicion Modifiers ---
     // Applies passive suspicion decay over time spent. Input: time passed in minutes. Output: none.
     void applySuspicionDecay(int minutesPassed);
-    // Returns a risk categorization string based on suspicion. Output: string description.
+    // Returns a risk categorization string based on suspicion. Input: none. Output: risk text.
     string suspicionRiskLevel() const;
 
     // --- Status Helpers ---
+    // Increments the move counter. Input: none. Output: none.
     void incrementMoves();
+    // Increments the search counter. Input: none. Output: none.
     void incrementSearches();
+    // Increments the used-item counter. Input: none. Output: none.
     void incrementItemsUsed();
+    // Returns the number of moves taken. Input: none. Output: move count.
     int totalMoves() const;
+    // Returns the number of searches made. Input: none. Output: search count.
     int totalSearches() const;
+    // Returns the number of item uses. Input: none. Output: item-use count.
     int itemsUsed() const;
+    // Returns the current hide streak. Input: none. Output: hide streak count.
     int hideStreak() const;
-    // Returns a formatted vector of strings describing the player's performance. Output: status lines.
+    // Returns a formatted vector of strings describing the player's performance. Input: none. Output: status lines.
     vector<string> statusSummary() const;
 
     // --- Save/Load Helpers ---
-    // Serializes inventory to a string format. Output: string.
+    // Serializes inventory to a string format. Input: none. Output: serialized inventory.
     string inventoryAsString() const;
     // Deserializes inventory string format and populates inventory mapping. Input: string. Output: none.
     void loadInventoryFromString(const string& data);

@@ -8,63 +8,54 @@ using namespace std;
 map<ItemType, Item> createItemTable() {
     map<ItemType, Item> table;
 
-    // Hall Pass: Single-use item that removes 15 suspicion when used.
     table[ItemType::HallPass] = Item(
         ItemType::HallPass,
         "hall pass",
-        "A forged faculty hall pass. Single use, drastically lowers suspicion.",
-        "You flash the forged hall pass. Security backs down.",
-        "There is nobody around to use the hall pass on.",
-        true,   // consumable
-        -15     // suspicionEffect
+        "A forged late-study pass with a staff stamp. Single use, lowers suspicion.",
+        "You flash the late-study pass and buy yourself some breathing room.",
+        "There is nobody here to calm down with the pass.",
+        true,
+        -15
     );
 
-    // Keycard: Permanent item. Normally, entering restricted areas
-    // raises suspicion. The keycard negates that penalty.
     table[ItemType::Keycard] = Item(
         ItemType::Keycard,
         "keycard",
-        "An admin-level security keycard. Removes penalties in restricted zones.",
-        "You swipe the keycard to bypass the security check.",
-        "This room doesn't require a keycard scan.",
-        false,  // not consumable
-        0       // suspicionEffect handled in game.cpp logic
+        "A Main Building access card that softens suspicion in watched rooms.",
+        "You swipe the card and move through before anyone asks questions.",
+        "There is no reader here that needs the card.",
+        false,
+        0
     );
 
-    // Screwdriver: Permanent item. Can open the bridge maintenance
-    // panel to access the rooftop cleanly.
     table[ItemType::Screwdriver] = Item(
         ItemType::Screwdriver,
         "screwdriver",
-        "A small flathead screwdriver. Great for opening maintenance panels.",
-        "You unbolt the bridge panel. A hidden maintenance shaft opens up.",
-        "There are no panels or screws to loosen here.",
-        false,  // not consumable
-        0       // suspicionEffect handled in game.cpp logic
+        "A flathead screwdriver from a Kadoorie maintenance bench.",
+        "You work the screws loose and open a hidden service access.",
+        "There is nothing here that needs the screwdriver.",
+        false,
+        0
     );
 
-    // Code Fragment: Stackable item. You need a random number (1-3)
-    // of these to crack the archive lock.
     table[ItemType::CodeFragment] = Item(
         ItemType::CodeFragment,
         "code fragment",
-        "A torn piece of a hexadecimal sequence.",
-        "You fit the fragment into the keypad logic.",
-        "The current terminal cannot interpret this code fragment.",
-        false,  // not strictly consumed by 'using', acts as a permanent key part
-        0       // suspicionEffect handled in game.cpp logic
+        "Part of a roof access code copied from old HKU records.",
+        "You line the fragment up with the rest of the code trail.",
+        "You still need the full code sequence for this to matter.",
+        false,
+        0
     );
 
-    // Rooftop Key: Single-use item. Opens the rooftop door from the archive,
-    // avoiding the heavy end-game suspicion spike.
     table[ItemType::RooftopKey] = Item(
         ItemType::RooftopKey,
         "rooftop key",
-        "A heavy magnetic key for the final roof exit door.",
-        "The heavy door clicks open smoothly. You slip through unseen.",
-        "This key only fits the final rooftop exit.",
-        true,   // consumable
-        0       // suspicionEffect handled in game.cpp logic
+        "A magnetic roof key paired with the Main Building stair door.",
+        "The old roof door clicks open and the way out clears.",
+        "This key only matters at the final roof exit.",
+        true,
+        0
     );
 
     return table;
@@ -121,246 +112,3 @@ vector<ItemType> allItemTypes() {
     types.push_back(ItemType::RooftopKey);
     return types;
 }
-
-// ============================================================================
-// SYSTEM EXPANSION AND ROADMAP DOCUMENTATION
-// ============================================================================
-// This section contains planned expansions, architectural notes, and
-// general lore to guide future development of the Loopbreak items module.
-// Maintaining a clear roadmap here ensures new developers understand
-// the underlying philosophy.
-//
-// Phase 1 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.
-// Phase 2 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.
-// Phase 3 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.
-// Phase 4 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.
-// Phase 5 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.
-// Phase 6 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.
-// Phase 7 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.
-// Phase 8 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.
-// Phase 9 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.
-// Phase 10 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.
-// Phase 11 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.
-// Phase 12 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.
-// Phase 13 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.
-// Phase 14 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.
-// Phase 15 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.
-// Phase 16 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.
-// Phase 17 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.
-// Phase 18 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.
-// Phase 19 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.
-// Phase 20 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.
-// Phase 21 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.
-// Phase 22 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.
-// Phase 23 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.
-// Phase 24 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.
-// Phase 25 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.
-// Phase 26 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.
-// Phase 27 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.
-// Phase 28 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.
-// Phase 29 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.
-// Phase 30 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.
-// Phase 31 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.
-// Phase 32 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.
-// Phase 33 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.
-// Phase 34 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.
-// Phase 35 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.
-// Phase 36 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.
-// Phase 37 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.
-// Phase 38 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.
-// Phase 39 Sub-System Expansion Plannings:
-// ----------------------------------------------------------------------------
-// We are planning to refactor the dependency injection model for items.
-// Currently, items are instantiated directly via the createItemTable factory.
-// Moving forward, we should consider loading these definitions from a JSON
-// or XML configuration file to allow modding without recompilation.

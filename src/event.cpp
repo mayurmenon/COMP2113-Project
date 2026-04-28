@@ -26,9 +26,9 @@ vector<game_event> create_event_list(int difficulty) {
     
     game_event fire_alarm;
     fire_alarm.id = "fire_alarm";
-    fire_alarm.description = "The fire alarm goes off, causing chaos and confusion.";
+    fire_alarm.description = "A fire alarm test spills people into University Street and briefly lowers the pressure.";
     fire_alarm.effect_type = effect_npc_moved;
-    fire_alarm.target_room = "main_corridor";
+    fire_alarm.target_room = "corridor";
     fire_alarm.target_npc = "";
     fire_alarm.suspiciousness_change = -5;
     fire_alarm.duration = 10;
@@ -41,10 +41,10 @@ vector<game_event> create_event_list(int difficulty) {
 
     game_event inspection;
     inspection.id = "corridor_inspection";
-    inspection.description = "A surprise inspection is announced, and the prefects are ordered to patrol the corridors.";
+    inspection.description = "Security makes an extra pass through the Main Building corridors.";
     inspection.effect_type = effect_none;
-    inspection.target_room = "faculty_corridor";
-    inspection.target_npc = "Student Prefect";
+    inspection.target_room = "faculty";
+    inspection.target_npc = "Security Guard";
     inspection.suspiciousness_change = 0;
     inspection.duration = 8;
     inspection.trigger_start = 60;
@@ -56,9 +56,9 @@ vector<game_event> create_event_list(int difficulty) {
 
     game_event power_dip;
     power_dip.id = "power_dip";
-    power_dip.description = "The power briefly goes out, plunging the school into darkness.";
+    power_dip.description = "A short power dip leaves parts of campus darker than usual.";
     power_dip.effect_type = effect_camera_offline;
-    power_dip.target_room = "security_room";
+    power_dip.target_room = "security";
     power_dip.target_npc = "";
     power_dip.suspiciousness_change = 0;
     power_dip.duration = 6;
@@ -71,9 +71,9 @@ vector<game_event> create_event_list(int difficulty) {
 
     game_event class_cancel;
     class_cancel.id = "class_cancellation";
-    class_cancel.description = "A class is cancelled, the lecture hall is empty and quiet.";
+    class_cancel.description = "A late booking in the Grand Hall is cancelled, leaving the foyer quieter than usual.";
     class_cancel.effect_type = effect_room_unlocked;
-    class_cancel.target_room = "lecture_hall";
+    class_cancel.target_room = "lecture";
     class_cancel.target_npc = "";
     class_cancel.suspiciousness_change = 0;
     class_cancel.duration = 60;
@@ -86,9 +86,9 @@ vector<game_event> create_event_list(int difficulty) {
 
     game_event crowd;
     crowd.id = "student_crowd";
-    crowd.description = "A large group of students floods chi wah, making it difficult to find a seat.";
+    crowd.description = "Chi Wah fills with students looking for seats, printers, and coffee.";
     crowd.effect_type = effect_suspicious_down;
-    crowd.target_room = "chi_wah";
+    crowd.target_room = "commons";
     crowd.target_npc = "";
     crowd.suspiciousness_change = -3;
     crowd.duration = 15;
@@ -101,9 +101,9 @@ vector<game_event> create_event_list(int difficulty) {
 
     game_event staff_meeting;
     staff_meeting.id = "staff_meeting";
-    staff_meeting.description = "A staff meeting is called. the admin officer and security guard are both in the main corridor for a while.The admin office is empty.";
+    staff_meeting.description = "A short staff meeting pulls people out of the Main Building office for a while.";
     staff_meeting.effect_type = effect_room_unlocked;
-    staff_meeting.target_room = "admin_office";
+    staff_meeting.target_room = "admin";
     staff_meeting.target_npc = "Admin Officer";
     staff_meeting.suspiciousness_change = 0;
     staff_meeting.duration = 20;
@@ -116,7 +116,7 @@ vector<game_event> create_event_list(int difficulty) {
 
     game_event rain;
     rain.id = "rain";
-    rain.description = "It starts raining, the rooftop exit is closed.";
+    rain.description = "Rain lashes the roof and the rooftop exit closes for a while.";
     rain.effect_type = effect_room_locked;
     rain.target_room = "rooftop";
     rain.target_npc = "";
@@ -131,10 +131,10 @@ vector<game_event> create_event_list(int difficulty) {
 
     game_event janitor_hint;
     janitor_hint.id = "janitor_hint";
-    janitor_hint.description = "The janitor mutters something and drops a folded note as he rushes past you.";
+    janitor_hint.description = "A cleaner near Kadoorie leaves behind a folded note about a service route.";
     janitor_hint.effect_type = effect_none;
-    janitor_hint.target_room = "science_lab";
-    janitor_hint.target_npc = "Mr George (Janitor)";
+    janitor_hint.target_room = "lab";
+    janitor_hint.target_npc = "Cleaner";
     janitor_hint.suspiciousness_change = 0;
     janitor_hint.duration = 0;
     janitor_hint.trigger_start = 120;
@@ -147,7 +147,7 @@ vector<game_event> create_event_list(int difficulty) {
     return events;
 }
 
-void event_check_trigger(vector<game_event>& events, int current_minute) {
+void event_check_trigger(vector<game_event>& events, int loop_minute) {
     // Check if any events should randomly trigger at this moment
     static bool seeded = false;
     if (!seeded) {
@@ -158,10 +158,10 @@ void event_check_trigger(vector<game_event>& events, int current_minute) {
         if (events[i].status != event_inactive) {
             continue;
         }
-        if (current_minute < events[i].trigger_start) {
+        if (loop_minute < events[i].trigger_start) {
             continue;
         }
-        if (current_minute > events[i].trigger_end) {
+        if (loop_minute > events[i].trigger_end) {
             continue;
         }
 
@@ -173,15 +173,19 @@ void event_check_trigger(vector<game_event>& events, int current_minute) {
     }
 }
 
-void events_tick(vector<game_event>& events) {
+void events_tick(vector<game_event>& events, int minutes_elapsed) {
     // Count down the duration of any active events
+    if (minutes_elapsed < 1) {
+        minutes_elapsed = 1;
+    }
     for (int i = 0; i < (int) events.size(); i++) {
         if (events[i].status != event_active) {
             continue;
         }
-        events[i].ticks_remaining--;
+        events[i].ticks_remaining -= minutes_elapsed;
         if (events[i].ticks_remaining <= 0) {
             events[i].status = event_done;
+            events[i].ticks_remaining = 0;
         }
     }
 }

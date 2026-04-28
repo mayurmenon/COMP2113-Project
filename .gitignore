@@ -1,5 +1,7 @@
+# Build outputs
 loopbreak
-loopbreak.exe
-savegame.txt
+*.exe
 *.o
 
+# Local runtime state
+savegame.txt

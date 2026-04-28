@@ -4,100 +4,100 @@ using namespace std;
 CampusMap::CampusMap() { reset(); }
 void CampusMap::reset() {
     rooms_.clear();
-    rooms_["dorm"] = Room("dorm", "Residence Room", "A cramped room where every loop begins. Your notes and gear are scattered from previous failed attempts.", vector<string>(), {"desk", "noticeboard", "half-packed bag", "sticky-note timeline"}, false);
-    rooms_["corridor"] = Room("corridor", "Main Corridor", "The busiest path on campus. Students drift by, security cameras blink, and every doorway feels like a fork in the heist.", vector<string>(), {"posters", "door signs", "camera dome", "maintenance map"}, false);
-    rooms_["lecture"] = Room("lecture", "Lecture Hall", "Rows of empty seats face a glowing projector. Whispering here carries farther than expected.", vector<string>(), {"podium", "front row", "side aisle", "under-seat vents"}, false);
-    rooms_["library"] = Room("library", "Library", "Reserve shelves, terminal logs, and scribbled margin notes point to routes most students never notice.", vector<string>(), {"reserve shelf", "catalog terminal", "newspaper rack", "annotated map"}, false);
-    rooms_["commons"] = Room("commons", "Learning Commons", "Open tables and group-study booths make this the easiest place to blend in and plan your next move.", vector<string>(), {"flyers", "whiteboard", "charging station", "projector cart"}, false);
-    rooms_["lab"] = Room("lab", "Science Lab", "Equipment trays and locked cabinets line the walls. A maintenance hatch is half-hidden behind gas canisters.", vector<string>(), {"tool bench", "storage cabinet", "maintenance hatch", "safety locker"}, false);
-    rooms_["faculty"] = Room("faculty", "Faculty Corridor", "A quiet corridor with frosted office doors and suspiciously frequent patrol routes.", vector<string>(), {"office plaques", "mail trays", "meeting board", "panic button panel"}, true);
-    rooms_["admin"] = Room("admin", "Admin Office", "Forms, attendance ledgers, and archived movement records reveal how the secure wing is really connected.", vector<string>(), {"filing cabinet", "reception desk", "routing binder", "clearance ledger"}, true);
-    rooms_["archive"] = Room("archive", "Archive Room", "Dusty cabinets hold the sealed folder. A coded lock and reinforced exit door protect the final objective.", vector<string>(), {"drawer bank", "coded lock", "sealed cabinet", "elevator override"}, true);
-    rooms_["quad"] = Room("quad", "Central Quad", "The open campus square links major buildings. Good visibility, but little cover if guards sweep through.", vector<string>(), {"event banner", "campus map", "statue base", "service hatch"}, false);
-    rooms_["canteen"] = Room("canteen", "Late-Night Canteen", "Lights hum over half-empty tables. Staff routes and delivery doors make this a useful mid-run detour.", vector<string>(), {"condiment counter", "tray return", "back noticeboard", "cold-room door"}, false);
-    rooms_["gym"] = Room("gym", "Sports Hall", "Echoing courts and locker rows hide side passages toward utility areas few students use.", vector<string>(), {"equipment cage", "locker row", "maintenance stairs", "bleacher access"}, false);
-    rooms_["security"] = Room("security", "Security Hub", "Monitor walls display camera feeds from restricted zones. One wrong move here ends runs quickly.", vector<string>(), {"monitor wall", "incident log", "key locker", "alert terminal"}, true);
-    rooms_["tunnel"] = Room("tunnel", "Service Tunnel", "A narrow maintenance tunnel under campus. It is dim, risky, and almost never patrolled on schedule.", vector<string>(), {"pipe junction", "junction box", "service grate", "drainage ladder"}, true);
-    rooms_["bridge"] = Room("bridge", "Footbridge", "A windy bridge between blocks. Beneath a bench, a bolted panel leads to a concealed ascent shaft.", vector<string>(), {"bench", "maintenance panel", "warning sign", "cable trench"}, false);
-    rooms_["clocktower"] = Room("clocktower", "Clocktower Stairwell", "A spiraling emergency stair climbs behind the old library wing. It is silent except for the mechanical clock ticks.", vector<string>(), {"service ladder", "clock console", "narrow landing", "locked gate"}, true);
-    rooms_["rooftop"] = Room("rooftop", "Rooftop Exit", "The skyline opens in every direction. Reach here with the folder before the loop collapses to break free.", vector<string>(), {"stair door", "radio mast", "skyline", "signal light"}, false);
+    rooms_["dorm"] = Room("dorm", "Swire Hall Room", "A small hall room above the Main Campus slope. Your desk is covered with notes from earlier loops that all ended too late.", vector<string>(), {"desk lamp", "hall notice", "half-packed bag", "folded route sketch"}, false);
+    rooms_["corridor"] = Room("corridor", "University Street", "The long HKU spine between Main Campus and Centennial Campus. Cameras, students, and late walkers make it busy, but not impossible to blend into.", vector<string>(), {"direction sign", "campus noticeboard", "camera dome", "route map"}, false);
+    rooms_["lecture"] = Room("lecture", "Grand Hall", "The Grand Hall foyer sits quiet after the day's events. Wide steps and side doors make it a useful early crossing point.", vector<string>(), {"usher desk", "seat row", "side stair", "backstage door"}, false);
+    rooms_["library"] = Room("library", "Main Library", "HKU's Main Library sits between the old and new parts of campus life. The clue you need is buried somewhere among its shelves and terminals.", vector<string>(), {"reserve shelf", "old wing terminal", "book return", "level 3 notice"}, false);
+    rooms_["commons"] = Room("commons", "Chi Wah Learning Commons", "Chi Wah is bright, open, and easy to disappear into. Booth seats, printers, and the spiral stair make it a good place to plan the next move.", vector<string>(), {"spiral stair", "group booth", "printer corner", "booking screen"}, false);
+    rooms_["lab"] = Room("lab", "Kadoorie Biological Sciences Building", "The Kadoorie labs still smell faintly of solvents and steel. A service hatch near the back wall matters more tonight than any experiment bench.", vector<string>(), {"tool bench", "specimen cabinet", "service hatch", "lab locker"}, false);
+    rooms_["faculty"] = Room("faculty", "Main Building Corridor", "The old Main Building corridor is lined with doors, plaques, and corners that carry sound. It feels historic, watched, and harder to cross cleanly.", vector<string>(), {"office plaques", "courtyard shutters", "heritage board", "bust niche"}, true);
+    rooms_["admin"] = Room("admin", "Main Building Office", "Forms, ledgers, and routing sheets from the Main Building office point toward the records room and the roof route beyond it.", vector<string>(), {"routing binder", "staff pigeonholes", "reception desk", "access forms"}, true);
+    rooms_["archive"] = Room("archive", "Main Building Records Room", "Old HKU records, sealed trays, and a locked stair door sit under a layer of dust. The file you need is here, but this is where the run turns dangerous.", vector<string>(), {"old wing shelves", "transfer box", "sealed file tray", "roof keypad"}, true);
+    rooms_["quad"] = Room("quad", "Centennial Campus Courtyard", "The Centennial Campus courtyard is open, bright, and exposed. It links Chi Wah, the footbridge, and the longer branches of the run.", vector<string>(), {"courtyard bench", "campus map", "lily pond sign", "event poster"}, false);
+    rooms_["canteen"] = Room("canteen", "Cafe 330", "Cafe 330 is quieter after the rush. It is a good place to breathe, check your notes, and move without too much attention.", vector<string>(), {"tray rack", "closing board", "receipt bin", "vending shelf"}, false);
+    rooms_["gym"] = Room("gym", "Sports Centre Hall", "The sports hall is large, echoing, and harder to read than it first looks. It is not the fastest branch, but it opens another way toward security.", vector<string>(), {"equipment cage", "locker row", "side stair", "bleacher gap"}, false);
+    rooms_["security"] = Room("security", "East Gate Security Office", "Monitors, incident logs, and access readers make this one of the most dangerous rooms on campus. It can help a run, but it can end one just as fast.", vector<string>(), {"monitor wall", "incident log", "key locker", "access reader"}, true);
+    rooms_["tunnel"] = Room("tunnel", "Centennial Service Tunnel", "A narrow service tunnel runs below the campus edge. It is dim and ugly, but it can cut around the cleaner public route when you are prepared.", vector<string>(), {"pipe junction", "service grate", "junction box", "ladder rung"}, true);
+    rooms_["bridge"] = Room("bridge", "University Street Footbridge", "The footbridge is open to wind and easy to watch from a distance. Beneath one bench, a bolted panel hides a much faster late-game route.", vector<string>(), {"bench", "bolted panel", "warning strip", "railing gap"}, false);
+    rooms_["clocktower"] = Room("clocktower", "Main Building Clock Tower", "The Main Building clock tower stair is narrow, old, and easy to misread. It is a strong backup route, but only if you are ready for it.", vector<string>(), {"old steps", "gate reader", "bell housing", "narrow landing"}, true);
+    rooms_["rooftop"] = Room("rooftop", "Main Building Rooftop", "The roof above the Main Building opens over Pokfulam and the rest of campus. Reach it with the file and the loop finally gives way.", vector<string>(), {"roof door", "signal light", "low wall", "city skyline"}, false);
 
-    rooms_["dorm"].addRoute(Route("corridor", "residence door", false, false, "", ""));
+    rooms_["dorm"].addRoute(Route("corridor", "hall door to University Street", false, false, "", ""));
 
-    rooms_["corridor"].addRoute(Route("dorm", "residence hall return", false, false, "", ""));
-    rooms_["corridor"].addRoute(Route("library", "north reading wing", false, false, "", ""));
-    rooms_["corridor"].addRoute(Route("lecture", "lecture wing access", false, false, "", ""));
-    rooms_["corridor"].addRoute(Route("commons", "commons glass doors", false, false, "", ""));
-    rooms_["corridor"].addRoute(Route("quad", "central quad gate", false, false, "", ""));
+    rooms_["corridor"].addRoute(Route("dorm", "return to Swire Hall", false, false, "", ""));
+    rooms_["corridor"].addRoute(Route("library", "Main Library entrance", false, false, "", ""));
+    rooms_["corridor"].addRoute(Route("lecture", "Grand Hall approach", false, false, "", ""));
+    rooms_["corridor"].addRoute(Route("commons", "Chi Wah entrance", false, false, "", ""));
+    rooms_["corridor"].addRoute(Route("quad", "Centennial courtyard gate", false, false, "", ""));
 
-    rooms_["lecture"].addRoute(Route("corridor", "main hall return", false, false, "", ""));
-    rooms_["lecture"].addRoute(Route("lab", "lab side door", false, false, "", ""));
+    rooms_["lecture"].addRoute(Route("corridor", "back to University Street", false, false, "", ""));
+    rooms_["lecture"].addRoute(Route("lab", "Kadoorie side door", false, false, "", ""));
 
-    rooms_["library"].addRoute(Route("corridor", "main stack exit", false, false, "", ""));
-    rooms_["library"].addRoute(Route("faculty", "staff records wing", false, true, "", ""));
-    rooms_["library"].addRoute(Route("clocktower", "clocktower service stair", true, true, "library_clue", "you have not decoded the library margin note to find that stairwell"));
+    rooms_["library"].addRoute(Route("corridor", "back to University Street", false, false, "", ""));
+    rooms_["library"].addRoute(Route("faculty", "Main Building side corridor", false, true, "", ""));
+    rooms_["library"].addRoute(Route("clocktower", "clock tower service stair", true, true, "library_clue", "you still have not read enough of the Main Library clue to find that stair"));
 
-    rooms_["commons"].addRoute(Route("corridor", "north doors", false, false, "", ""));
-    rooms_["commons"].addRoute(Route("admin", "records office passage", false, true, "", ""));
-    rooms_["commons"].addRoute(Route("canteen", "late canteen cutthrough", false, false, "", ""));
+    rooms_["commons"].addRoute(Route("corridor", "University Street doors", false, false, "", ""));
+    rooms_["commons"].addRoute(Route("admin", "Main Building office passage", false, true, "", ""));
+    rooms_["commons"].addRoute(Route("canteen", "Cafe 330 cutthrough", false, false, "", ""));
 
-    rooms_["lab"].addRoute(Route("lecture", "lecture hall return", false, false, "", ""));
-    rooms_["lab"].addRoute(Route("faculty", "faculty service door", false, true, "", ""));
-    rooms_["lab"].addRoute(Route("tunnel", "maintenance hatch", true, true, "screwdriver", "the lab hatch is still bolted. you need a screwdriver"));
+    rooms_["lab"].addRoute(Route("lecture", "Grand Hall return", false, false, "", ""));
+    rooms_["lab"].addRoute(Route("faculty", "Main Building service door", false, true, "", ""));
+    rooms_["lab"].addRoute(Route("tunnel", "Kadoorie service hatch", true, true, "screwdriver", "the Kadoorie hatch is still bolted. you need a screwdriver"));
 
-    rooms_["faculty"].addRoute(Route("library", "archive index wing", false, true, "", ""));
-    rooms_["faculty"].addRoute(Route("lab", "research wing return", false, true, "", ""));
-    rooms_["faculty"].addRoute(Route("admin", "admin side corridor", false, true, "", ""));
-    rooms_["faculty"].addRoute(Route("security", "security checkpoint", false, true, "keycard_or_hidden", "security hub requires cover. hide first or carry a keycard"));
+    rooms_["faculty"].addRoute(Route("library", "library side return", false, true, "", ""));
+    rooms_["faculty"].addRoute(Route("lab", "Kadoorie return", false, true, "", ""));
+    rooms_["faculty"].addRoute(Route("admin", "office side corridor", false, true, "", ""));
+    rooms_["faculty"].addRoute(Route("security", "East Gate checkpoint", false, true, "keycard_or_hidden", "East Gate security needs cover. hide first or carry a keycard"));
 
-    rooms_["admin"].addRoute(Route("commons", "commons return", false, true, "", ""));
-    rooms_["admin"].addRoute(Route("faculty", "faculty return", false, true, "", ""));
-    rooms_["admin"].addRoute(Route("archive", "secure archive door", false, true, "admin_route", "the archive wing is blocked until you confirm the route"));
-    rooms_["admin"].addRoute(Route("security", "monitor room door", false, true, "keycard_or_hidden", "security hub requires cover. hide first or carry a keycard"));
+    rooms_["admin"].addRoute(Route("commons", "Chi Wah return", false, true, "", ""));
+    rooms_["admin"].addRoute(Route("faculty", "Main Building return", false, true, "", ""));
+    rooms_["admin"].addRoute(Route("archive", "records room door", false, true, "admin_route", "the records room is still locked until you map the route"));
+    rooms_["admin"].addRoute(Route("security", "security side door", false, true, "keycard_or_hidden", "East Gate security needs cover. hide first or carry a keycard"));
 
-    rooms_["archive"].addRoute(Route("admin", "admin corridor return", false, true, "", ""));
-    rooms_["archive"].addRoute(Route("tunnel", "sublevel conduit", true, true, "screwdriver", "the tunnel grate is jammed. you need a screwdriver to force it"));
-    rooms_["archive"].addRoute(Route("rooftop", "sealed stair door", false, true, "rooftop_key", "the door to the roof is locked. you need the rooftop key."));
+    rooms_["archive"].addRoute(Route("admin", "office corridor return", false, true, "", ""));
+    rooms_["archive"].addRoute(Route("tunnel", "service conduit", true, true, "screwdriver", "the service grate is still jammed. you need a screwdriver"));
+    rooms_["archive"].addRoute(Route("rooftop", "Main Building roof stair", false, true, "rooftop_key", "the roof stair is still locked. you need the rooftop key"));
 
-    rooms_["quad"].addRoute(Route("corridor", "academic block entrance", false, false, "", ""));
-    rooms_["quad"].addRoute(Route("bridge", "east footbridge", false, false, "", ""));
-    rooms_["quad"].addRoute(Route("canteen", "canteen side lane", false, false, "", ""));
+    rooms_["quad"].addRoute(Route("corridor", "University Street return", false, false, "", ""));
+    rooms_["quad"].addRoute(Route("bridge", "footbridge access", false, false, "", ""));
+    rooms_["quad"].addRoute(Route("canteen", "Cafe 330 lane", false, false, "", ""));
     rooms_["quad"].addRoute(Route("gym", "sports hall gate", false, false, "", ""));
 
-    rooms_["canteen"].addRoute(Route("quad", "quad return", false, false, "", ""));
-    rooms_["canteen"].addRoute(Route("commons", "study lounge passage", false, false, "", ""));
+    rooms_["canteen"].addRoute(Route("quad", "courtyard return", false, false, "", ""));
+    rooms_["canteen"].addRoute(Route("commons", "Chi Wah passage", false, false, "", ""));
 
-    rooms_["gym"].addRoute(Route("quad", "main court exit", false, false, "", ""));
-    rooms_["gym"].addRoute(Route("security", "security side entrance", false, true, "keycard_or_hidden", "security hub requires cover. hide first or carry a keycard"));
+    rooms_["gym"].addRoute(Route("quad", "courtyard exit", false, false, "", ""));
+    rooms_["gym"].addRoute(Route("security", "security side entrance", false, true, "keycard_or_hidden", "East Gate security needs cover. hide first or carry a keycard"));
 
-    rooms_["security"].addRoute(Route("gym", "sports wing exit", false, true, "", ""));
-    rooms_["security"].addRoute(Route("faculty", "faculty corridor door", false, true, "", ""));
-    rooms_["security"].addRoute(Route("admin", "admin corridor door", false, true, "", ""));
+    rooms_["security"].addRoute(Route("gym", "sports hall exit", false, true, "", ""));
+    rooms_["security"].addRoute(Route("faculty", "Main Building door", false, true, "", ""));
+    rooms_["security"].addRoute(Route("admin", "office door", false, true, "", ""));
 
-    rooms_["tunnel"].addRoute(Route("lab", "maintenance hatch return", true, true, "screwdriver", "the lab hatch is still bolted. you need a screwdriver"));
-    rooms_["tunnel"].addRoute(Route("archive", "archive grate bypass", true, true, "screwdriver", "the tunnel grate is jammed. you need a screwdriver to force it"));
+    rooms_["tunnel"].addRoute(Route("lab", "Kadoorie hatch return", true, true, "screwdriver", "the Kadoorie hatch is still bolted. you need a screwdriver"));
+    rooms_["tunnel"].addRoute(Route("archive", "records room grate", true, true, "screwdriver", "the records-room grate is still jammed. you need a screwdriver"));
 
-    rooms_["bridge"].addRoute(Route("quad", "quad return", false, false, "", ""));
-    rooms_["bridge"].addRoute(Route("rooftop", "maintenance shaft ascent", true, true, "screwdriver", "the maintenance panel is bolted shut. you need a screwdriver."));
+    rooms_["bridge"].addRoute(Route("quad", "courtyard return", false, false, "", ""));
+    rooms_["bridge"].addRoute(Route("rooftop", "maintenance shaft ascent", true, true, "screwdriver", "the footbridge panel is still bolted shut. you need a screwdriver"));
 
-    rooms_["clocktower"].addRoute(Route("library", "library clock stair return", true, true, "library_clue", "you have not decoded the library margin note to find that stairwell"));
-    rooms_["clocktower"].addRoute(Route("rooftop", "clocktower gate", true, true, "keycard", "the clocktower gate is magnetically locked. a keycard is required."));
+    rooms_["clocktower"].addRoute(Route("library", "Main Library stair return", true, true, "library_clue", "you still have not read enough of the Main Library clue to find that stair"));
+    rooms_["clocktower"].addRoute(Route("rooftop", "clock tower gate", true, true, "keycard", "the clock tower gate is locked. a keycard is required"));
 
-    rooms_["rooftop"].addRoute(Route("bridge", "bridge stair down", false, false, "", ""));
-    rooms_["rooftop"].addRoute(Route("archive", "archive stairwell down", false, false, "", ""));
-    rooms_["rooftop"].addRoute(Route("clocktower", "clocktower descent", false, false, "", ""));
+    rooms_["rooftop"].addRoute(Route("bridge", "footbridge stairs down", false, false, "", ""));
+    rooms_["rooftop"].addRoute(Route("archive", "records stairwell down", false, false, "", ""));
+    rooms_["rooftop"].addRoute(Route("clocktower", "clock tower descent", false, false, "", ""));
 
     rooms_["dorm"].threatProfile = "safe";
     rooms_["dorm"].patrolIntensity = 0;
-    rooms_["dorm"].addAmbientDetail("A muffled alarm from another room resets with each loop.");
-    rooms_["dorm"].addAmbientDetail("Someone in the next room keeps practicing the same guitar riff.");
-    rooms_["dorm"].addAmbientDetail("The corridor light leaks through the bottom of your door.");
-    rooms_["dorm"].addAmbientDetail("Your own scribbled timeline is taped to the wardrobe.");
-    rooms_["dorm"].addAmbientDetail("The campus app notification repeats yesterday's warning.");
-    rooms_["dorm"].addExplorationDetail("The desk drawer has old security patrol timings from last loop.");
-    rooms_["dorm"].addExplorationDetail("A folded hand sketch marks lab and archive utility lines.");
-    rooms_["dorm"].addExplorationDetail("Your half-packed bag has room for one more key item.");
-    rooms_["dorm"].addExplorationDetail("Sticky notes suggest the bridge path is faster but exposed.");
+    rooms_["dorm"].addAmbientDetail("A late-night hall noise drifts in from Swire Hall and then goes quiet again.");
+    rooms_["dorm"].addAmbientDetail("The corridor light under the door makes it feel like you never really slept.");
+    rooms_["dorm"].addAmbientDetail("Your phone still shows an old HKU notice you remember reading in the last loop.");
+    rooms_["dorm"].addAmbientDetail("The room smells faintly of paper, rain, and cold instant coffee.");
+    rooms_["dorm"].addAmbientDetail("Your desk is still set up exactly the way you left it in the last failed run.");
+    rooms_["dorm"].addExplorationDetail("A sketch on the desk links the Main Library, the Main Building, and the roof.");
+    rooms_["dorm"].addExplorationDetail("Old notes suggest the footbridge route is fast but exposed.");
+    rooms_["dorm"].addExplorationDetail("You kept one page just for security timings near University Street.");
+    rooms_["dorm"].addExplorationDetail("Your bag is empty enough to carry a few key items without slowing you down.");
     rooms_["dorm"].addProgressionHint("Start with public rooms to gather low-risk items.");
     rooms_["dorm"].addProgressionHint("If runs fail, reset your route through corridor -> library first.");
     rooms_["dorm"].addProgressionHint("The heist is easiest when clue, route, and escape tool are staged early.");
@@ -105,75 +105,75 @@ void CampusMap::reset() {
 
     rooms_["corridor"].threatProfile = "watched";
     rooms_["corridor"].patrolIntensity = 1;
-    rooms_["corridor"].addAmbientDetail("Camera motors click every few seconds above the noticeboard.");
-    rooms_["corridor"].addAmbientDetail("Student chatter masks quiet footsteps if you move with the crowd.");
-    rooms_["corridor"].addAmbientDetail("A custodian cart blocks one section before drifting away.");
-    rooms_["corridor"].addAmbientDetail("The overhead lights flicker near the lecture wing.");
-    rooms_["corridor"].addAmbientDetail("Patrol shoes echo louder after noon loops.");
-    rooms_["corridor"].addExplorationDetail("Door sign updates reveal which wings become restricted later.");
-    rooms_["corridor"].addExplorationDetail("A folded events map shows fastest access to the quad.");
-    rooms_["corridor"].addExplorationDetail("One camera has a blind edge near a vending alcove.");
-    rooms_["corridor"].addExplorationDetail("Public boards often hide forged hall passes.");
+    rooms_["corridor"].addAmbientDetail("Cameras watch the flow along University Street in a slow fixed rhythm.");
+    rooms_["corridor"].addAmbientDetail("Students crossing between Main Campus and Centennial Campus make good moving cover.");
+    rooms_["corridor"].addAmbientDetail("A cleaning cart sits under a sign for the Main Library and Grand Hall.");
+    rooms_["corridor"].addAmbientDetail("You can hear footsteps from several HKU buildings at once from here.");
+    rooms_["corridor"].addAmbientDetail("The slope and long sightlines make hesitation feel more dangerous than movement.");
+    rooms_["corridor"].addExplorationDetail("The signs here tell you how close the Main Library and Chi Wah really are.");
+    rooms_["corridor"].addExplorationDetail("A campus board shows which branches stay public later into the evening.");
+    rooms_["corridor"].addExplorationDetail("One camera misses a thin slice of space near a vending alcove.");
+    rooms_["corridor"].addExplorationDetail("Loose notices near the board are a good place to find a hall pass.");
     rooms_["corridor"].addProgressionHint("This is your safest transit spine to branch into each objective.");
     rooms_["corridor"].addProgressionHint("Rotate between library and commons to avoid repeated patrol contact.");
     rooms_["corridor"].addProgressionHint("Use corridor to recover pace before entering restricted wings.");
 
     rooms_["lecture"].threatProfile = "low";
     rooms_["lecture"].patrolIntensity = 1;
-    rooms_["lecture"].addAmbientDetail("The projector fan hums in an otherwise empty hall.");
-    rooms_["lecture"].addAmbientDetail("Rows of chairs create cover lines from the side door.");
-    rooms_["lecture"].addAmbientDetail("A cleaning staff schedule is still pinned near the podium.");
-    rooms_["lecture"].addAmbientDetail("An emergency exit light glows toward the lab passage.");
-    rooms_["lecture"].addAmbientDetail("Old lecture slides show facilities floor plans by accident.");
-    rooms_["lecture"].addExplorationDetail("The podium drawer has outdated but useful room labels.");
-    rooms_["lecture"].addExplorationDetail("Under-seat vents carry noise from nearby corridors.");
-    rooms_["lecture"].addExplorationDetail("A side aisle lets you reposition without crossing open floor.");
-    rooms_["lecture"].addExplorationDetail("The hall is good for regaining stealth rhythm before lab.");
+    rooms_["lecture"].addAmbientDetail("The Grand Hall foyer feels too large after the tight quiet of the hall room.");
+    rooms_["lecture"].addAmbientDetail("Event signs and folded chairs make the space feel between uses.");
+    rooms_["lecture"].addAmbientDetail("The side stair toward Kadoorie stays dimmer than the main entrance.");
+    rooms_["lecture"].addAmbientDetail("Your footsteps bounce off the hall and come back a half-second later.");
+    rooms_["lecture"].addAmbientDetail("A projector glow still leaks from deeper inside the lecture space.");
+    rooms_["lecture"].addExplorationDetail("Backstage notices still show room names that help you read the west side of campus.");
+    rooms_["lecture"].addExplorationDetail("The side aisle is better than the open middle if you need to move quietly.");
+    rooms_["lecture"].addExplorationDetail("The hall gives you a calm buffer before pushing into Kadoorie.");
+    rooms_["lecture"].addExplorationDetail("From here, the route to Kadoorie feels shorter than it looked on paper.");
     rooms_["lecture"].addProgressionHint("Use lecture as a low-risk transition into lab routes.");
     rooms_["lecture"].addProgressionHint("If suspicion is high, avoid lingering and move through fast.");
     rooms_["lecture"].addProgressionHint("Lab access from here supports both direct and hidden progression.");
 
     rooms_["library"].threatProfile = "research";
     rooms_["library"].patrolIntensity = 1;
-    rooms_["library"].addAmbientDetail("The reference desk printer keeps spitting the same queue ticket.");
-    rooms_["library"].addAmbientDetail("Floor lamps dim whenever staff pass through reserve stacks.");
-    rooms_["library"].addAmbientDetail("Card scanners beep softly from the periodicals wing.");
-    rooms_["library"].addAmbientDetail("Clocktower ticks are faint behind the old architecture wall.");
-    rooms_["library"].addAmbientDetail("Catalog terminals auto-lock after short idle windows.");
-    rooms_["library"].addExplorationDetail("Reserve shelf notes provide the first reliable clue path.");
-    rooms_["library"].addExplorationDetail("Annotated margins mention the clocktower service stair.");
-    rooms_["library"].addExplorationDetail("Terminal logs map admin references to archive paperwork.");
-    rooms_["library"].addExplorationDetail("A map annotation hints faculty wing patrol timing.");
+    rooms_["library"].addAmbientDetail("The Main Library feels calmer than the rest of campus, but never truly empty.");
+    rooms_["library"].addAmbientDetail("A scanner beeps somewhere between the old and new wings.");
+    rooms_["library"].addAmbientDetail("Reserve shelves make narrow lines of cover if you keep moving.");
+    rooms_["library"].addAmbientDetail("The quiet here is broken by keyboards, printers, and the clock tower beyond the wall.");
+    rooms_["library"].addAmbientDetail("A self-check machine throws a dull blue light over the nearby shelves.");
+    rooms_["library"].addExplorationDetail("A margin note near the reserve shelf starts the first real route clue.");
+    rooms_["library"].addExplorationDetail("The clue mentions the Main Building and hints at the clock tower stair.");
+    rooms_["library"].addExplorationDetail("Terminal logs link office records to older parts of the Main Building.");
+    rooms_["library"].addExplorationDetail("The map near the shelf gives just enough to trust the next step.");
     rooms_["library"].addProgressionHint("Secure library clue before attempting clocktower or admin routes.");
     rooms_["library"].addProgressionHint("This room unlocks strategic routing knowledge for late game.");
     rooms_["library"].addProgressionHint("Re-searching library can still reveal timing-safe transitions.");
 
     rooms_["commons"].threatProfile = "public";
     rooms_["commons"].patrolIntensity = 1;
-    rooms_["commons"].addAmbientDetail("Conversation noise gives you cover from isolated surveillance.");
-    rooms_["commons"].addAmbientDetail("A digital noticeboard cycles society events and room bookings.");
-    rooms_["commons"].addAmbientDetail("Power strips spark occasionally along the north tables.");
-    rooms_["commons"].addAmbientDetail("Night staff cross here between canteen and admin.");
-    rooms_["commons"].addAmbientDetail("Study booths create temporary blind spots at the edges.");
-    rooms_["commons"].addExplorationDetail("A whiteboard sketch includes an outdated admin map.");
-    rooms_["commons"].addExplorationDetail("Flyers sometimes conceal forged hall pass stashes.");
-    rooms_["commons"].addExplorationDetail("Charging station logs show when staff devices leave admin.");
-    rooms_["commons"].addExplorationDetail("The canteen cutthrough is a quiet detour when corridor heats up.");
+    rooms_["commons"].addAmbientDetail("Chi Wah still hums softly with printers, screens, and small study groups.");
+    rooms_["commons"].addAmbientDetail("The spiral stair makes it easy to hear people before you see them.");
+    rooms_["commons"].addAmbientDetail("Booth seats and open tables break sightlines better than the corridor outside.");
+    rooms_["commons"].addAmbientDetail("A booking screen flips between study rooms and student spaces.");
+    rooms_["commons"].addAmbientDetail("The courtyard entrance lets cooler air drift in from Centennial Campus.");
+    rooms_["commons"].addExplorationDetail("A sketch on a whiteboard lines up with the Main Building office branch.");
+    rooms_["commons"].addExplorationDetail("Loose paper near the booths is a believable place for a hall pass to surface.");
+    rooms_["commons"].addExplorationDetail("Printer traffic here can hide a quick move better than silence can.");
+    rooms_["commons"].addExplorationDetail("The Cafe 330 cutthrough is useful when University Street feels too watched.");
     rooms_["commons"].addProgressionHint("Use commons to set up admin entry with lower initial suspicion.");
     rooms_["commons"].addProgressionHint("Canteen detours can reduce repeated restricted exposure.");
     rooms_["commons"].addProgressionHint("This room is ideal for pacing before archive attempts.");
 
     rooms_["lab"].threatProfile = "tooling";
     rooms_["lab"].patrolIntensity = 2;
-    rooms_["lab"].addAmbientDetail("Gas canisters rattle whenever someone opens the hatch panel.");
-    rooms_["lab"].addAmbientDetail("Safety posters partially cover an old maintenance route map.");
-    rooms_["lab"].addAmbientDetail("A lab timer alarm repeats every hour in looped rhythm.");
-    rooms_["lab"].addAmbientDetail("Storage cabinets slam shut from draft pressure.");
-    rooms_["lab"].addAmbientDetail("A metallic smell gets stronger near the service hatch.");
-    rooms_["lab"].addExplorationDetail("Tool benches are your best source for screwdriver upgrades.");
-    rooms_["lab"].addExplorationDetail("The maintenance hatch opens hidden progression into tunnel.");
-    rooms_["lab"].addExplorationDetail("Cabinet labels reference sublevel conduit IDs.");
-    rooms_["lab"].addExplorationDetail("Research logs mention patrol checks near faculty doors.");
+    rooms_["lab"].addAmbientDetail("The Kadoorie lab is quiet enough that every metal sound feels too loud.");
+    rooms_["lab"].addAmbientDetail("A service hatch near the back wall breaks the clean line of the room.");
+    rooms_["lab"].addAmbientDetail("Labels on cabinets and benches make the room feel more practical than academic tonight.");
+    rooms_["lab"].addAmbientDetail("The smell of metal and cleaning fluid gets stronger near the hatch.");
+    rooms_["lab"].addAmbientDetail("A timer somewhere deeper in the lab keeps repeating the same cycle.");
+    rooms_["lab"].addExplorationDetail("The Kadoorie tool bench is the best place to find a screwdriver.");
+    rooms_["lab"].addExplorationDetail("The hatch here leads into a hidden route below Centennial Campus.");
+    rooms_["lab"].addExplorationDetail("Cabinet codes suggest the service line connects back toward the Main Building.");
+    rooms_["lab"].addExplorationDetail("Research notes mention checks near the Main Building service door.");
     rooms_["lab"].addProgressionHint("Acquire screwdriver here before attempting tunnel/bridge escapes.");
     rooms_["lab"].addProgressionHint("Lab gives alternate heist tempo if admin route is crowded.");
     rooms_["lab"].addProgressionHint("Tool acquisition here enables two independent escape branches.");
@@ -195,30 +195,30 @@ void CampusMap::reset() {
 
     rooms_["admin"].threatProfile = "restricted";
     rooms_["admin"].patrolIntensity = 3;
-    rooms_["admin"].addAmbientDetail("Printers periodically dump attendance sheets and route codes.");
-    rooms_["admin"].addAmbientDetail("Reception cameras pivot toward archive wing doors.");
-    rooms_["admin"].addAmbientDetail("A desk fan masks soft keypad beeps from secure terminals.");
-    rooms_["admin"].addAmbientDetail("Clipboard stacks indicate active nightly security checks.");
-    rooms_["admin"].addAmbientDetail("Clearance cards on lanyards disappear as loops progress.");
-    rooms_["admin"].addExplorationDetail("Filing cabinets contain route clues to unlock archive access.");
-    rooms_["admin"].addExplorationDetail("Routing binders validate your adminRoute progression flag.");
-    rooms_["admin"].addExplorationDetail("Code fragments can be discovered through records cross-checks.");
-    rooms_["admin"].addExplorationDetail("Security door here offers high-risk alternate branching.");
+    rooms_["admin"].addAmbientDetail("The Main Building office still holds the tired noise of printers and fans.");
+    rooms_["admin"].addAmbientDetail("Paper trays, ledgers, and access forms sit in careful late-night order.");
+    rooms_["admin"].addAmbientDetail("A camera keeps sweeping the door toward the records room.");
+    rooms_["admin"].addAmbientDetail("The office is orderly enough that any delay feels suspicious.");
+    rooms_["admin"].addAmbientDetail("A lanyard hook hangs empty, then full, depending on the loop.");
+    rooms_["admin"].addExplorationDetail("The routing binder is the cleanest way to map the records-room path.");
+    rooms_["admin"].addExplorationDetail("Cross-checking ledgers here can uncover part of the roof code.");
+    rooms_["admin"].addExplorationDetail("The side door to security is useful, but only if you are ready for the risk.");
+    rooms_["admin"].addExplorationDetail("The Main Building office is where the route stops being theory.");
     rooms_["admin"].addProgressionHint("Confirm admin route before direct archive attempts.");
     rooms_["admin"].addProgressionHint("Use keycard to reduce suspicion pressure while gathering fragments.");
     rooms_["admin"].addProgressionHint("Admin is where the heist turns from setup into execution.");
 
     rooms_["archive"].threatProfile = "critical";
     rooms_["archive"].patrolIntensity = 4;
-    rooms_["archive"].addAmbientDetail("Metal cabinets creak even when untouched.");
-    rooms_["archive"].addAmbientDetail("The coded lock flashes warning patterns between attempts.");
-    rooms_["archive"].addAmbientDetail("A reinforced stair door seals toward rooftop route.");
-    rooms_["archive"].addAmbientDetail("Air vents carry tunnel drafts from beneath the floor.");
-    rooms_["archive"].addAmbientDetail("A silent camera dome tracks movement around the cabinet row.");
-    rooms_["archive"].addExplorationDetail("The sealed folder is hidden behind coded cabinet logic.");
-    rooms_["archive"].addExplorationDetail("Code fragments combine here to produce rooftop key access.");
-    rooms_["archive"].addExplorationDetail("Tunnel bypass provides alternate entry under high pressure.");
-    rooms_["archive"].addExplorationDetail("Time spent here rapidly raises attention and risk.");
+    rooms_["archive"].addAmbientDetail("Old cabinets in the records room creak even when you barely touch them.");
+    rooms_["archive"].addAmbientDetail("The roof keypad blinks in a steady pattern near the stair door.");
+    rooms_["archive"].addAmbientDetail("Air from the service line rises through the floor near the back grate.");
+    rooms_["archive"].addAmbientDetail("This room feels older than the rest of the run, and less forgiving.");
+    rooms_["archive"].addAmbientDetail("The silence here is sharp enough to make every mistake feel louder.");
+    rooms_["archive"].addExplorationDetail("The sealed file is hidden among old Main Building transfer records.");
+    rooms_["archive"].addExplorationDetail("This room is also where the loose roof code starts to make sense.");
+    rooms_["archive"].addExplorationDetail("The tunnel is ugly, but it does give you another way in and out.");
+    rooms_["archive"].addExplorationDetail("Every extra second in the records room pushes the run closer to failure.");
     rooms_["archive"].addProgressionHint("Archive is the final objective room: enter prepared, exit quickly.");
     rooms_["archive"].addProgressionHint("Bring route knowledge and key items before committing.");
     rooms_["archive"].addProgressionHint("Once folder is secured, prioritize nearest viable escape route.");
@@ -226,126 +226,123 @@ void CampusMap::reset() {
 
     rooms_["quad"].threatProfile = "open";
     rooms_["quad"].patrolIntensity = 1;
-    rooms_["quad"].addAmbientDetail("Open air carries announcements from multiple buildings.");
-    rooms_["quad"].addAmbientDetail("Guard routes cross here in visible but predictable patterns.");
-    rooms_["quad"].addAmbientDetail("Student groups cluster near the central statue at dusk.");
-    rooms_["quad"].addAmbientDetail("Delivery carts briefly block line-of-sight near canteen lane.");
-    rooms_["quad"].addAmbientDetail("Gym floodlights brighten one side of the square.");
-    rooms_["quad"].addExplorationDetail("Campus map signage helps optimize multi-room route loops.");
-    rooms_["quad"].addExplorationDetail("Bridge access from here enables fast late-game exits.");
-    rooms_["quad"].addExplorationDetail("Gym and canteen branches provide safer reroute options.");
-    rooms_["quad"].addExplorationDetail("Open visibility makes it easier to avoid accidental patrol collision.");
-    rooms_["quad"].addProgressionHint("Use quad as a route balancing hub between risk and speed.");
-    rooms_["quad"].addProgressionHint("Bridge branch is fast; gym branch is safer for resets.");
-    rooms_["quad"].addProgressionHint("A good quad transition preserves time for archive execution.");
+    rooms_["quad"].addAmbientDetail("The Centennial Campus courtyard feels wide and bright even after most classes are done.");
+    rooms_["quad"].addAmbientDetail("Light spills out from Chi Wah and the Grand Hall across the open podium.");
+    rooms_["quad"].addAmbientDetail("A small sign points toward the lily pond and the upper level of University Street.");
+    rooms_["quad"].addAmbientDetail("People crossing the courtyard give you cover if you keep your pace natural.");
+    rooms_["quad"].addAmbientDetail("The open space makes it easy to see trouble coming from far away.");
+    rooms_["quad"].addExplorationDetail("This is a good place to slow down and choose between the footbridge, Cafe 330, and the sports side.");
+    rooms_["quad"].addExplorationDetail("The courtyard is safer than the Main Building, but too open for long delays.");
+    rooms_["quad"].addExplorationDetail("A campus sign here helps you keep the Centennial side straight in your head.");
+    rooms_["quad"].addExplorationDetail("If the Main Building feels too hot, this branch gives you room to reset the run.");
+    rooms_["quad"].addProgressionHint("Use the courtyard to change branches without adding too much risk.");
+    rooms_["quad"].addProgressionHint("This is where faster and safer routes start to split apart.");
+    rooms_["quad"].addProgressionHint("The footbridge is the quick route. Cafe 330 and the sports side are calmer.");
 
     rooms_["canteen"].threatProfile = "low";
     rooms_["canteen"].patrolIntensity = 1;
-    rooms_["canteen"].addAmbientDetail("Kitchen extractors hum above mostly empty tables.");
-    rooms_["canteen"].addAmbientDetail("Tray carts shield movement near the service corridor.");
-    rooms_["canteen"].addAmbientDetail("Staff shift logs are pinned near the freezer door.");
-    rooms_["canteen"].addAmbientDetail("A back noticeboard tracks deliveries to restricted wings.");
-    rooms_["canteen"].addAmbientDetail("Cleaning schedules repeat at nearly identical loop times.");
-    rooms_["canteen"].addExplorationDetail("Hall passes can surface here among posted notices.");
-    rooms_["canteen"].addExplorationDetail("Delivery timings hint when admin receives unattended parcels.");
-    rooms_["canteen"].addExplorationDetail("Cutthrough route helps avoid heavily watched corridor moments.");
-    rooms_["canteen"].addExplorationDetail("The room offers low-risk recovery after restricted runs.");
-    rooms_["canteen"].addProgressionHint("Use canteen as a pressure-release node in long runs.");
-    rooms_["canteen"].addProgressionHint("If suspicion spikes, regroup here before next restricted entry.");
-    rooms_["canteen"].addProgressionHint("Canteen path pairs well with commons-led progression.");
+    rooms_["canteen"].addAmbientDetail("Cafe 330 is almost empty now, with just a few trays left near the self-service counter.");
+    rooms_["canteen"].addAmbientDetail("The late kitchen noise is soft enough to cover a short stop.");
+    rooms_["canteen"].addAmbientDetail("A closing board and drink fridge glow near the edge of the room.");
+    rooms_["canteen"].addAmbientDetail("Most people here are focused on coffee, food, or getting back out.");
+    rooms_["canteen"].addAmbientDetail("It is one of the easiest rooms on campus to look normal in.");
+    rooms_["canteen"].addExplorationDetail("Loose notices and receipts here are a believable place to notice a spare hall pass.");
+    rooms_["canteen"].addExplorationDetail("This cutthrough is useful when University Street feels too exposed.");
+    rooms_["canteen"].addExplorationDetail("Cafe 330 is better for breathing space than for major progress.");
+    rooms_["canteen"].addExplorationDetail("A short stop here can steady the run before you go back into watched rooms.");
+    rooms_["canteen"].addProgressionHint("Use Cafe 330 as a calm detour, not as your main plan.");
+    rooms_["canteen"].addProgressionHint("If suspicion rises, this is one of the safer places to recover.");
+    rooms_["canteen"].addProgressionHint("This room fits well between Chi Wah and the courtyard.");
 
     rooms_["gym"].threatProfile = "medium";
     rooms_["gym"].patrolIntensity = 2;
-    rooms_["gym"].addAmbientDetail("Echoes make footsteps difficult to localize from distance.");
-    rooms_["gym"].addAmbientDetail("Locker rows create short visual barriers along the walls.");
-    rooms_["gym"].addAmbientDetail("A maintenance stairwell links toward security access points.");
-    rooms_["gym"].addAmbientDetail("Floodlights switch modes at predictable intervals.");
-    rooms_["gym"].addAmbientDetail("Equipment cages rattle when patrols check the area.");
-    rooms_["gym"].addExplorationDetail("Gym branch offers an alternate approach into security hub.");
-    rooms_["gym"].addExplorationDetail("Bleacher shadows can briefly help with stealth positioning.");
-    rooms_["gym"].addExplorationDetail("This path is slower than corridor but can be safer.");
-    rooms_["gym"].addExplorationDetail("Guard habits here are cyclic and learnable across loops.");
-    rooms_["gym"].addProgressionHint("Gym route is useful when faculty corridor is too hot.");
-    rooms_["gym"].addProgressionHint("Combine hiding and movement timing before security entry.");
-    rooms_["gym"].addProgressionHint("This branch supports controlled, low-chaos progression.");
+    rooms_["gym"].addAmbientDetail("The sports hall is big enough that sound moves strangely under the lights.");
+    rooms_["gym"].addAmbientDetail("Locker rows and side doors break up the room more than you expect at first glance.");
+    rooms_["gym"].addAmbientDetail("A notice near the entrance still lists the long opening hours of the sports centre.");
+    rooms_["gym"].addAmbientDetail("The far end of the hall is darker, but the open floor still makes careless movement obvious.");
+    rooms_["gym"].addAmbientDetail("This side of campus feels separate from the library route, which can be useful.");
+    rooms_["gym"].addExplorationDetail("The sports side gives you another way to approach security when the Main Building route is rough.");
+    rooms_["gym"].addExplorationDetail("You can learn the rhythm here, but the room is slower than the central route.");
+    rooms_["gym"].addExplorationDetail("The gym is a backup branch, not the fastest branch.");
+    rooms_["gym"].addExplorationDetail("If you need a less direct route into a watched area, this is often the better choice.");
+    rooms_["gym"].addProgressionHint("Use the sports side when the centre of campus feels too busy.");
+    rooms_["gym"].addProgressionHint("This branch is slower, but it can save a shaky run.");
+    rooms_["gym"].addProgressionHint("You do not need this route every loop, but it matters when pressure rises.");
 
     rooms_["security"].threatProfile = "critical";
     rooms_["security"].patrolIntensity = 4;
-    rooms_["security"].addAmbientDetail("Monitor walls show moving views of every restricted sector.");
-    rooms_["security"].addAmbientDetail("Card readers flash red until valid credentials are swiped.");
-    rooms_["security"].addAmbientDetail("Radio chatter increases with every suspicious movement spike.");
-    rooms_["security"].addAmbientDetail("Incident logs are updated in strict ten-minute intervals.");
-    rooms_["security"].addAmbientDetail("A locker unit stores emergency bypass cards.");
-    rooms_["security"].addExplorationDetail("Searching here can reveal keycard-grade route control intel.");
-    rooms_["security"].addExplorationDetail("Hub access improves pathing decisions in admin/faculty wings.");
-    rooms_["security"].addExplorationDetail("Movement through this room is high-risk even when prepared.");
-    rooms_["security"].addExplorationDetail("Hidden approach or keycard is strongly recommended.");
-    rooms_["security"].addProgressionHint("Enter only with stealth state or keycard support.");
-    rooms_["security"].addProgressionHint("Use hub information quickly; prolonged stay is dangerous.");
-    rooms_["security"].addProgressionHint("Security can accelerate heist completion or trigger rapid failure.");
+    rooms_["security"].addAmbientDetail("The East Gate security office is full of monitor glow, radio noise, and too many lines of sight.");
+    rooms_["security"].addAmbientDetail("The newer East Gate access feels clean and bright in a way that makes you more visible, not less.");
+    rooms_["security"].addAmbientDetail("Reader lights flash near the desk while camera feeds cycle across the wall.");
+    rooms_["security"].addAmbientDetail("This is the kind of room where even standing still can feel wrong.");
+    rooms_["security"].addAmbientDetail("If the run goes bad here, it goes bad fast.");
+    rooms_["security"].addExplorationDetail("A careful search here can turn up the keycard that makes the Main Building safer.");
+    rooms_["security"].addExplorationDetail("This room gives strong control over later routes, but it is never low-risk.");
+    rooms_["security"].addExplorationDetail("Come in hidden or already prepared, then leave quickly.");
+    rooms_["security"].addExplorationDetail("The East Gate side rewards confidence more than hesitation.");
+    rooms_["security"].addProgressionHint("Treat security as a deliberate choice, not a casual stop.");
+    rooms_["security"].addProgressionHint("If you enter, know what you want before you search.");
+    rooms_["security"].addProgressionHint("This room can make later runs easier, but only if you survive it.");
 
     rooms_["tunnel"].threatProfile = "hidden";
     rooms_["tunnel"].patrolIntensity = 3;
-    rooms_["tunnel"].addAmbientDetail("Pipes knock in rhythm with distant boiler pulses.");
-    rooms_["tunnel"].addAmbientDetail("Condensation drips make footing uneven and loud.");
-    rooms_["tunnel"].addAmbientDetail("Airflow patterns indicate the nearest hatch exits.");
-    rooms_["tunnel"].addAmbientDetail("Emergency strip lights fail intermittently.");
-    rooms_["tunnel"].addAmbientDetail("Metal grates vibrate when someone crosses archive stairs above.");
-    rooms_["tunnel"].addExplorationDetail("Tunnel bypass can skip standard admin-to-archive pressure.");
-    rooms_["tunnel"].addExplorationDetail("Code fragments may appear in service boxes and utility logs.");
-    rooms_["tunnel"].addExplorationDetail("Route requires screwdriver at both entry and archive grate.");
-    rooms_["tunnel"].addExplorationDetail("This is a hidden, risky branch for flexible progression.");
-    rooms_["tunnel"].addProgressionHint("Use tunnel when direct restricted corridors are too costly.");
-    rooms_["tunnel"].addProgressionHint("Do not enter without tool readiness and exit plan.");
-    rooms_["tunnel"].addProgressionHint("Tunnel path can salvage near-failed runs with fast repositioning.");
+    rooms_["tunnel"].addAmbientDetail("The service tunnel under the Centennial side is wet, close, and louder than it should be.");
+    rooms_["tunnel"].addAmbientDetail("Pipes and old wiring run beside the narrow path toward the Main Building side.");
+    rooms_["tunnel"].addAmbientDetail("Every drip sounds bigger here because there is nowhere for the noise to go.");
+    rooms_["tunnel"].addAmbientDetail("It is ugly, but it gives you something the public route does not: privacy.");
+    rooms_["tunnel"].addAmbientDetail("The tunnel feels like a place students were never meant to stay in for long.");
+    rooms_["tunnel"].addExplorationDetail("The Kadoorie hatch and the records-room grate turn this into a real alternate route.");
+    rooms_["tunnel"].addExplorationDetail("If you know where to come up, the tunnel can cut past the most annoying parts of the Main Building.");
+    rooms_["tunnel"].addExplorationDetail("This route is for commitment, not drifting.");
+    rooms_["tunnel"].addExplorationDetail("The hidden path matters most when the normal route is already slipping away.");
+    rooms_["tunnel"].addProgressionHint("Use the tunnel after you have a screwdriver and a reason to be here.");
+    rooms_["tunnel"].addProgressionHint("This branch is strong because it is direct, not because it is safe.");
+    rooms_["tunnel"].addProgressionHint("A tunnel run works best when you already know your exit.");
 
     rooms_["bridge"].threatProfile = "exposed";
     rooms_["bridge"].patrolIntensity = 2;
-    rooms_["bridge"].addAmbientDetail("Wind noise masks short bursts of movement.");
-    rooms_["bridge"].addAmbientDetail("Open sight lines make you easy to spot if you hesitate.");
-    rooms_["bridge"].addAmbientDetail("A bolted panel sits under the bench near warning tape.");
-    rooms_["bridge"].addAmbientDetail("Security lights from rooftops sweep this crossing intermittently.");
-    rooms_["bridge"].addAmbientDetail("The metal railing hums from the city draft.");
-    rooms_["bridge"].addExplorationDetail("Screwdriver unlocks hidden maintenance shaft to rooftop.");
-    rooms_["bridge"].addExplorationDetail("Bridge route is one of the fastest endgame escapes.");
-    rooms_["bridge"].addExplorationDetail("Without tool prep, this branch is a dead end.");
-    rooms_["bridge"].addExplorationDetail("Exposure risk is high, so commit only when ready.");
-    rooms_["bridge"].addProgressionHint("Bridge is your speed route once screwdriver is secured.");
-    rooms_["bridge"].addProgressionHint("Time this branch for final extraction with folder in hand.");
-    rooms_["bridge"].addProgressionHint("Fast but exposed: use when suspicion remains manageable.");
-    rooms_["bridge"].addProgressionHint("Avoid bridge stalls; commit to movement once on the span.");
+    rooms_["bridge"].addAmbientDetail("The University Street footbridge is open to wind, light, and anyone looking up from below.");
+    rooms_["bridge"].addAmbientDetail("The metal bench and warning strip look ordinary until you know what is hidden there.");
+    rooms_["bridge"].addAmbientDetail("The bridge gives a strong view back toward Centennial Campus and across the slope.");
+    rooms_["bridge"].addAmbientDetail("It is easy to cross quickly and much harder to linger without drawing attention.");
+    rooms_["bridge"].addAmbientDetail("This is one of the cleanest places to feel how exposed the late game really is.");
+    rooms_["bridge"].addExplorationDetail("With the screwdriver, the panel below the bench opens a faster rooftop route.");
+    rooms_["bridge"].addExplorationDetail("This branch is quick enough to save a good run and exposed enough to ruin a messy one.");
+    rooms_["bridge"].addExplorationDetail("Do not come here early unless you already know why.");
+    rooms_["bridge"].addExplorationDetail("When the bridge works, it works because you commit and move.");
+    rooms_["bridge"].addProgressionHint("The footbridge is the fast escape path once your tool route is ready.");
+    rooms_["bridge"].addProgressionHint("Use this branch late, not as a general-purpose detour.");
+    rooms_["bridge"].addProgressionHint("Speed is the reward here. Exposure is the cost.");
 
     rooms_["clocktower"].threatProfile = "hidden-critical";
     rooms_["clocktower"].patrolIntensity = 3;
-    rooms_["clocktower"].addAmbientDetail("Clock gears grind behind stone walls in heavy pulses.");
-    rooms_["clocktower"].addAmbientDetail("Narrow steps amplify every misplaced footstep.");
-    rooms_["clocktower"].addAmbientDetail("A magnetic gate blocks rooftop ascent without credentials.");
-    rooms_["clocktower"].addAmbientDetail("Dust trails reveal infrequent but possible patrol checks.");
-    rooms_["clocktower"].addAmbientDetail("The stairwell is silent except for mechanical ticks.");
-    rooms_["clocktower"].addExplorationDetail("Library clue reveals this hidden high-risk rooftop branch.");
-    rooms_["clocktower"].addExplorationDetail("Keycard is required to pass the final gate.");
-    rooms_["clocktower"].addExplorationDetail("Route is stealthy but unforgiving if unprepared.");
-    rooms_["clocktower"].addExplorationDetail("Useful as alternate extraction when archive stair is blocked.");
-    rooms_["clocktower"].addProgressionHint("Treat clocktower as backup escape for well-prepared runs.");
-    rooms_["clocktower"].addProgressionHint("Do not route here until clue and keycard are secured.");
-    rooms_["clocktower"].addProgressionHint("This branch increases heist depth and alternate completion paths.");
-    rooms_["clocktower"].addProgressionHint("Clocktower is slower than bridge but safer from open sight lines.");
+    rooms_["clocktower"].addAmbientDetail("The Main Building clock tower stair is narrow, dusty, and much older than the rest of the run.");
+    rooms_["clocktower"].addAmbientDetail("The sound of the clock carries through the stone and makes the whole stair feel alive.");
+    rooms_["clocktower"].addAmbientDetail("A locked gate near the top turns the tower from a secret into a real route problem.");
+    rooms_["clocktower"].addAmbientDetail("This branch feels hidden, but never relaxed.");
+    rooms_["clocktower"].addAmbientDetail("Every step here reminds you that the Main Building is older than your plan.");
+    rooms_["clocktower"].addExplorationDetail("The Main Library clue is what teaches you this stair exists at all.");
+    rooms_["clocktower"].addExplorationDetail("With a keycard, the tower becomes a slower but controlled roof route.");
+    rooms_["clocktower"].addExplorationDetail("The clock tower is a backup path, not the easiest first win.");
+    rooms_["clocktower"].addExplorationDetail("This is the route for runs where observation matters more than speed.");
+    rooms_["clocktower"].addProgressionHint("Only come here after the library clue and a keycard are ready.");
+    rooms_["clocktower"].addProgressionHint("The tower rewards patience more than improvisation.");
+    rooms_["clocktower"].addProgressionHint("This is the clean backup route when the bridge feels too exposed.");
 
     rooms_["rooftop"].threatProfile = "escape";
     rooms_["rooftop"].patrolIntensity = 1;
-    rooms_["rooftop"].addAmbientDetail("The skyline opens in every direction above the campus blocks.");
-    rooms_["rooftop"].addAmbientDetail("Signal lights blink as if synced to the time loop itself.");
-    rooms_["rooftop"].addAmbientDetail("Wind carries distant sirens from the city edge.");
-    rooms_["rooftop"].addAmbientDetail("Metal doors from archive, bridge, and clocktower converge here.");
-    rooms_["rooftop"].addAmbientDetail("Every completed route feels different, but ends in the same sky.");
-    rooms_["rooftop"].addExplorationDetail("Arrival with folder immediately fulfills the loopbreak condition.");
-    rooms_["rooftop"].addExplorationDetail("Multiple ingress points make this the core extraction node.");
-    rooms_["rooftop"].addExplorationDetail("Reaching here proves progression and route planning worked.");
-    rooms_["rooftop"].addExplorationDetail("The final sequence rewards whichever escape branch you prepared.");
-    rooms_["rooftop"].addProgressionHint("All heist branches should converge here with the folder.");
-    rooms_["rooftop"].addProgressionHint("Plan extraction before entering archive to avoid rushed failure.");
-    rooms_["rooftop"].addProgressionHint("A complete run links clue, route, key items, folder, and rooftop.");
-    rooms_["rooftop"].addProgressionHint("Successful progression is measured by both completion and control.");
+    rooms_["rooftop"].addAmbientDetail("The Main Building rooftop opens over Pokfulam and the rest of the campus below.");
+    rooms_["rooftop"].addAmbientDetail("Wind pulls at the door behind you while the lights of HKU spread out under the edge.");
+    rooms_["rooftop"].addAmbientDetail("From up here, the whole run finally starts to make sense as one connected place.");
+    rooms_["rooftop"].addAmbientDetail("Archive stairs, the footbridge shaft, and the clock tower all end in the same cold air.");
+    rooms_["rooftop"].addAmbientDetail("This is the first room that feels outside the loop.");
+    rooms_["rooftop"].addExplorationDetail("Reaching the rooftop with the sealed file is the one thing that actually ends the night.");
+    rooms_["rooftop"].addExplorationDetail("The roof is the payoff for every clue, route, and item you prepared below.");
+    rooms_["rooftop"].addExplorationDetail("It does not matter which branch got you here. It matters that you got here with the file.");
+    rooms_["rooftop"].addExplorationDetail("The run ends above campus, not inside it.");
+    rooms_["rooftop"].addProgressionHint("Every route in the game is really an argument about how you want to reach this roof.");
+    rooms_["rooftop"].addProgressionHint("Do the dangerous work below. Keep the roof for the finish.");
+    rooms_["rooftop"].addProgressionHint("A clean win means arriving here with the file before the loop closes.");
 }
 const Room* CampusMap::get(const string& roomId) const {
     map<string, Room>::const_iterator found = rooms_.find(roomId);
@@ -377,10 +374,33 @@ MoveCheck CampusMap::validateMove(const string& from, const string& to, const Mo
     }
     return MoveCheck(true, route->hidden, route->risky, "");
 }
+namespace {
+string quickExitLabel(const Room* target, bool locked) {
+    string label = target ? target->name + " [" + target->id + "]" : "unknown";
+    if (locked) label += " (locked)";
+    return label;
+}
+string detailedExitLabel(const Room* target, const Route& route, bool unlocked) {
+    string label = "- ";
+    label += target ? target->name + " [" + target->id + "]" : route.to;
+    vector<string> flags;
+    if (route.hidden) flags.push_back("hidden");
+    if (route.risky) flags.push_back("risky");
+    if (!unlocked) flags.push_back("locked");
+    if (!flags.empty()) label += " : " + Utils::join(flags, ", ");
+    return label;
+}
+}
 string CampusMap::exitsOf(const string& roomId) const {
     const Room* room = get(roomId);
     if (!room) return "";
-    return Utils::join(room->routeTargets(false), ", ");
+    vector<string> labels;
+    vector<string> targets = room->routeTargets(false);
+    for (int i = 0; i < (int) targets.size(); i++) {
+        const Room* target = get(targets[i]);
+        labels.push_back(quickExitLabel(target, false));
+    }
+    return Utils::join(labels, ", ");
 }
 string CampusMap::exitsOf(const string& roomId, const MovementContext& context) const {
     const Room* room = get(roomId);
@@ -389,37 +409,57 @@ string CampusMap::exitsOf(const string& roomId, const MovementContext& context) 
     for (int i = 0; i < (int)room->routes.size(); i++) {
         const Route& route = room->routes[i];
         bool unlocked = requirementMet(route.requirement, context);
-        string label = route.to;
-        if (route.hidden) label += " [hidden]";
-        if (route.risky) label += " [risky]";
-        if (!unlocked) label += " [locked]";
-        labels.push_back(label);
+        const Room* target = get(route.to);
+        labels.push_back(quickExitLabel(target, !unlocked));
     }
     return Utils::join(labels, ", ");
+}
+string CampusMap::exitListOf(const string& roomId) const {
+    const Room* room = get(roomId);
+    if (!room) return "";
+    vector<string> labels;
+    vector<string> targets = room->routeTargets(false);
+    for (int i = 0; i < (int) targets.size(); i++) {
+        const Room* target = get(targets[i]);
+        labels.push_back("- " + quickExitLabel(target, false));
+    }
+    return Utils::join(labels, "\n");
+}
+string CampusMap::exitListOf(const string& roomId, const MovementContext& context) const {
+    const Room* room = get(roomId);
+    if (!room) return "";
+    vector<string> labels;
+    for (int i = 0; i < (int)room->routes.size(); i++) {
+        const Route& route = room->routes[i];
+        bool unlocked = requirementMet(route.requirement, context);
+        const Room* target = get(route.to);
+        labels.push_back(detailedExitLabel(target, route, unlocked));
+    }
+    return Utils::join(labels, "\n");
 }
 vector<string> CampusMap::availableEscapeRoutes(const MovementContext& context) const {
     vector<string> routes;
     if (requirementMet("rooftop_key", context)) {
-        routes.push_back("archive stair route");
+        routes.push_back("Main Building roof stair");
     }
     if (requirementMet("screwdriver", context)) {
-        routes.push_back("bridge maintenance shaft");
+        routes.push_back("University Street footbridge shaft");
     }
     if (requirementMet("library_clue", context) && requirementMet("keycard", context)) {
-        routes.push_back("clocktower emergency stair");
+        routes.push_back("Main Building clock tower stair");
     }
     return routes;
 }
 string CampusMap::progressionSummary(const MovementContext& context, bool hasFolder) const {
-    if (!context.libraryClue && !context.hasScrewdriver) return "stage 1: gather intelligence and tools in public academic zones";
-    if (!context.adminRoute && !context.hasScrewdriver) return "stage 2: decode admin route access to archive wing";
-    if (!context.adminRoute && context.hasScrewdriver && !hasFolder) return "stage 2: hidden maintenance path can bypass standard archive access";
-    if (!hasFolder) return "stage 3: penetrate archive and retrieve sealed objective";
+    if (!context.libraryClue && !context.hasScrewdriver) return "stage 1: learn the safe public side of campus";
+    if (!context.adminRoute && !context.hasScrewdriver) return "stage 2: turn the Main Library clue into a records-room route";
+    if (!context.adminRoute && context.hasScrewdriver && !hasFolder) return "stage 2: the Kadoorie tool route can bypass the normal records-room entry";
+    if (!hasFolder) return "stage 3: enter the records room and take the sealed file";
     vector<string> routes = availableEscapeRoutes(context);
-    if (routes.empty()) return "stage 4: objective secured, but no rooftop route unlocked";
-    if ((int)routes.size() == 1) return "stage 4: objective secured, one extraction route available";
-    if ((int)routes.size() == 2) return "stage 4: objective secured, two extraction routes available";
-    return "stage 4: objective secured, all extraction routes available";
+    if (routes.empty()) return "stage 4: you have the file, but you still need a roof route";
+    if ((int)routes.size() == 1) return "stage 4: you have the file and one roof route";
+    if ((int)routes.size() == 2) return "stage 4: you have the file and two roof routes";
+    return "stage 4: you have the file and every roof route is open";
 }
 vector<string> CampusMap::roomDossier(const string& roomId) const {
     vector<string> notes;
@@ -602,17 +642,23 @@ vector<string> CampusMap::heistChecklist(const MovementContext& context, bool ha
     return list;
 }
 string CampusMap::layout() const {
-    return "Campus map\n"
-           "[dorm]\n"
-           "  |\n"
-           "[corridor]--[lecture]--[lab]===([tunnel])===[archive]--[rooftop]\n"
-           "  |            |         |         |          ^          ^\n"
-           "[library]---[faculty]--[security]--[admin]---+          |\n"
-           " ((clocktower))                                      ^\n"
-           "  |                                                  |\n"
-           " [hidden stair]                                      |\n"
-           "  |                                                |\n"
-           "[quad]----[gym]------------------------------[bridge]\n"
-           "  |\n"
-           "[canteen]----[commons]------------------------+";
+    return "HKU route map\n"
+           "Start side\n"
+           "  Swire Hall Room [dorm]\n"
+           "    -> University Street [corridor]\n"
+           "    -> Main Library [library]\n"
+           "    -> Grand Hall [lecture]\n"
+           "    -> Chi Wah Learning Commons [commons]\n"
+           "    -> Centennial Campus Courtyard [quad]\n"
+           "\n"
+           "Main route\n"
+           "  Chi Wah -> Main Building Office [admin] -> Main Building Records Room [archive] -> Main Building Rooftop [rooftop]\n"
+           "\n"
+           "Alternate branches\n"
+           "  Grand Hall -> Kadoorie Biological Sciences Building [lab] -> Centennial Service Tunnel [tunnel]\n"
+           "  Courtyard -> University Street Footbridge [bridge]\n"
+           "  Main Library -> Main Building Clock Tower [clocktower]\n"
+           "  Courtyard -> Cafe 330 [canteen] or Sports Centre Hall [gym]\n"
+           "\n"
+           "Tip: use move with either the short id in brackets or the full HKU place name.";
 }
