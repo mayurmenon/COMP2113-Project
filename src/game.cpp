@@ -23,7 +23,7 @@ const string roseColor = "\033[38;5;204m";
 const string redColor = "\033[38;5;203m";
 const string silverColor = "\033[38;5;188m";
 const string whiteColor = "\033[1;97m";
-const int panelWidth = 78;
+const int panelWidth = 116;
 // Repeats one character many times. Input: character and count. Output: repeated text.
 string repeatChar(char letter, int count) { return count > 0 ? string(count, letter) : ""; }
 // Normalizes text for command matching. Input: raw text. Output: trimmed lowercase text.
@@ -238,13 +238,17 @@ vector<string> labelBlock(const string& label, const string& text, int width) {
     }
     return block;
 }
-vector<string> mergeColumns(const vector<string>& left, const vector<string>& right, int leftWidth, int rightWidth) {
+
+vector<string> mergeThreeColumns(const vector<string>& left, const vector<string>& mid, const vector<string>& right, int leftWidth, int midWidth, int rightWidth) {
     vector<string> rows;
-    int total = max((int) left.size(), (int) right.size());
-    for (int index = 0; index < total; index++) {
-        string leftText = index < (int) left.size() ? left[index] : "";
-        string rightText = index < (int) right.size() ? right[index] : "";
-        rows.push_back(padRight(leftText, leftWidth) + tint(" | ", dividerColor) + padRight(rightText, rightWidth));
+    int maxLines = (int) left.size();
+    if ((int) mid.size() > maxLines) maxLines = (int) mid.size();
+    if ((int) right.size() > maxLines) maxLines = (int) right.size();
+    for (int index = 0; index < maxLines; index++) {
+        string l = index < (int) left.size() ? left[index] : "";
+        string m = index < (int) mid.size() ? mid[index] : "";
+        string r = index < (int) right.size() ? right[index] : "";
+        rows.push_back(padRight(l, leftWidth) + tint(" | ", dividerColor) + padRight(m, midWidth) + tint(" | ", dividerColor) + padRight(r, rightWidth));
     }
     return rows;
 }
@@ -461,6 +465,20 @@ void Game::drawBox(const string& title, const vector<string>& lines) const {
     }
     cout << tone << "+" << repeatChar('=', panelWidth - 2) << "+" << mainColor << "\n";
 }
+void Game::drawBoxRaw(const string& title, const vector<string>& lines) const {
+    int innerWidth = panelWidth - 4;
+    string tone = panelTone(title);
+    string label = brightColor + "[ " + title + " ]" + mainColor;
+    string top = tone + "+=" + label;
+    int topFill = panelWidth - 1 - visibleLength(top);
+    if (topFill < 0) topFill = 0;
+    top += repeatChar('=', topFill) + "+" + mainColor;
+    cout << top << "\n";
+    for (int index = 0; index < (int) lines.size(); index++) {
+        cout << tone << "| " << mainColor << padRight(lines[index], innerWidth) << tone << " |" << mainColor << "\n";
+    }
+    cout << tone << "+" << repeatChar('=', panelWidth - 2) << "+" << mainColor << "\n";
+}
 string Game::prompt(const string& area) const {
     string key = lowerText(area);
     string tone = roomTone(key);
@@ -668,15 +686,16 @@ void Game::showRoom() const {
 
     left.push_back(sectionHeading("PATHS", blueColor));
     string pathText = onboardingStage() <= 1 ? map_.exitsOf(room->id) : map_.exitsOf(room->id, context);
-    vector<string> block = labelBlock("move", pathText, 46);
+    vector<string> block = labelBlock("move", pathText, 45);
     left.insert(left.end(), block.begin(), block.end());
     left.push_back("");
     left.push_back(sectionHeading("ACTION", goldColor));
-    block = labelBlock("search", Utils::join(room->searchables, ", "), 46);
+    block = labelBlock("search", Utils::join(room->searchables, ", "), 45);
     left.insert(left.end(), block.begin(), block.end());
 
-    vector<string> lines = mergeColumns(left, sidebarLines(), 46, 25);
-    drawBox("current room", lines);
+    vector<string> art = getAsciiArt(room->id);
+    vector<string> lines = mergeThreeColumns(left, sidebarLines(), art, 45, 25, 36);
+    drawBoxRaw("current room", lines);
 }
 void Game::showHelp() const {
     vector<string> lines;
@@ -1238,4 +1257,249 @@ MovementContext Game::movementContext() const {
     context.hasRooftopKey = player_.hasItem(ItemType::RooftopKey);
     context.hidden = player_.hidden();
     return context;
+}
+vector<string> Game::getAsciiArt(const string& roomId) const {
+    string id = lowerText(roomId);
+    string art = "";
+
+    if (id == "dorm") {
+        art = R"(
+          __________
+         |          |
+         |  SWIRE   |
+         |   HALL   |
+         |          |
+         | [][][][] |
+         | [][][][] |
+         | [][][][] |
+         | [][][][] |
+         | [][][][] |
+         | [][][][] |
+         | [][][][] |
+         | [][][][] |
+         | [][][][] |
+         | [][][][] |
+         | __    __ |
+    _____||__|__||__|_____
+   /                      \
+  |________________________|
+)";
+    } else if (id == "quad") {
+        art = R"(
+       _|_
+      |   |
+  ____|___|____
+ /             \
+|   SUN YAT-SEN |
+|     STEPS     |
+|_______________|
+   | |     | |
+   | |     | |
+  /   \   /   \
+ |_____| |_____|
+ |_____| |_____|
+)";
+    } else if (id == "library") {
+        art = R"(
+     _________
+    /         \
+   /           \
+  |   MAIN      |
+  |  LIBRARY    |
+  |             |
+  | [][][][][]  |
+  | [][][][][]  |
+  | [][][][][]  |
+  |             |
+  |   __   __   |
+  |  |  | |  |  |
+  |__|__|_|__|__|
+)";
+    } else if (id == "clocktower") {
+        art = R"(
+      _|_
+     /   \
+    | [9] |
+    |/   \|
+    |  |  |
+    |  |  |
+    |  |  |
+    |  |  |
+    |  |  |
+   /|  |  |\
+  / |__|__| \
+ |___________|
+)";
+    } else if (id == "corridor") {
+        art = R"(
+            / \
+           /   \
+          /     \
+         /       \
+        /  UNIV   \
+       /   STREET  \
+      /_____________ \
+     /      |  |      \
+    /       |  |       \
+   /        |  |        \
+  /         |  |         \
+ /__________|__|__________\
+)";
+    } else if (id == "admin") {
+        art = R"(
+  |==============|
+  |   KNOWLES    |
+  |   BUILDING   |
+  |  __________  |
+  | |          | |
+  | |  OFFICES | |
+  | |          | |
+  | |__________| |
+  |  __________  |
+  | |          | |
+  | |  ADMIN   | |
+  | |__________| |
+  |______________|
+)";
+    } else if (id == "security") {
+        art = R"(
+   _____________
+  |  _________  |
+  | | [REC]   | |
+  | |         | |
+  | | MONITOR | |
+  | |_________| |
+  |   _______   |
+  |  |       |  |
+  |  | GUARD |  |
+  |  |_______|  |
+  |_____________|
+)";
+    } else if (id == "archive") {
+        art = R"(
+   _____________
+  |  _________  |
+  | | SHELVES | |
+  | |_________| |
+  |  _________  |
+  | |  FILES  | |
+  | |_________| |
+  |  _________  |
+  | | SECRETS | |
+  | |_________| |
+  |_____________|
+)";
+    } else if (id == "lab") {
+        art = R"(
+      _______
+     |   _   |
+     |  | |  |
+     |  |_|  |
+   __|_______|__
+  |  _________  |
+  | | BEAKERS | |
+  | |_________| |
+  |      |      |
+  |    --o--    |
+  |______|______|
+)";
+    } else if (id == "rooftop") {
+        art = R"(
+      _^_
+    /     \
+   /       \
+  |  SKYLINE |
+  |  VIEW    |
+  |          |
+  |  ______  |
+  | |      | |
+  | | EDGE | |
+  | |______| |
+  |          |
+ _|__________|__
+)";
+    } else if (id == "bridge") {
+        art = R"(
+   _________________
+  /                 \
+ |     BRIDGE        |
+ |   ___________     |
+ |  /           \    |
+ | /             \   |
+ |/               \  |
+ |_________________|
+ |  |           |  |
+ |  |           |  |
+ |__|___________|__|
+)";
+    } else if (id == "tunnel") {
+        art = R"(
+      _________
+     /         \
+    /   TUNNEL  \
+   |   _______   |
+   |  /       \  |
+   | |         | |
+   | |  EXIT   | |
+   | |         | |
+   |  \_______/  |
+   |_____________|
+)";
+    } else if (id == "commons") {
+        art = R"(
+   _____________
+  |  _________  |
+  | | CHI WAH | |
+  | |_________| |
+  |  _________  |
+  | | STUDY   | |
+  | | PODS    | |
+  | |_________| |
+  |  _________  |
+  | | COFFEE  | |
+  | |_________| |
+  |_____________|
+)";
+    } else if (id == "canteen") {
+        art = R"(
+   _____________
+  |  _________  |
+  | | CANTEEN | |
+  | |_________| |
+  |  _        _  |
+  | | |      | | |
+  | | | MEAL | | |
+  | |_|      |_| |
+  |   ________   |
+  |  | TABLES |  |
+  |  |________|  |
+  |_____________|
+)";
+    } else {
+        art = R"(
+      _______
+     /       \
+    /   HKU   \
+   |  CAMPUS  |
+   |          |
+   |   PLACE  |
+   |          |
+   |   ____   |
+   |  |    |  |
+   |  |____|  |
+   |__________|
+)";
+    }
+
+    vector<string> rawLines = splitLines(art);
+    vector<string> centered;
+    for (const string& line : rawLines) {
+        if (Utils::trim(line).empty() && centered.empty()) continue; // skip leading empty
+        centered.push_back(line); // Keep leading spaces for alignment
+    }
+    // Centering within the 36-char column
+    for (int i = 0; i < (int)centered.size(); i++) {
+        centered[i] = centerText(centered[i], 36);
+    }
+    return centered;
 }

@@ -69,6 +69,8 @@ private:
     void clearScreen() const;
     // Draws a framed panel of text. Input: title and body lines. Output: none.
     void drawBox(const string& title, const vector<string>& lines) const;
+    // Draws a framed panel of text without wrapping the content.
+    void drawBoxRaw(const string& title, const vector<string>& lines) const;
     // Builds the input prompt text. Input: current area name. Output: prompt string.
     string prompt(const string& area) const;
     // Builds a simple progress bar. Input: value, max value, width. Output: bar string.
@@ -123,6 +125,8 @@ private:
     void useItem(const string& itemName);
     // Returns the current onboarding stage used for UI and hints. Input: none. Output: stage number.
     int onboardingStage() const;
+    // Returns the current story beat shown at the top of the screen. Input: none. Output: story text.
+    string storyBeat() const;
     // Returns the current hint text based on difficulty and progress. Input: none. Output: hint text.
     string activeHint() const;
     // Builds the current easy-mode guide lines. Input: none. Output: guide lines.
@@ -135,5 +139,7 @@ private:
     void checkReset();
     // Builds map movement context from current player state. Input: none. Output: movement context.
     MovementContext movementContext() const;
+    // Returns high-fidelity ASCII art for the current location.
+    vector<string> getAsciiArt(const string& roomId) const;
 };
 #endif
