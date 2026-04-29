@@ -4,11 +4,11 @@ Loopbreak is a text-based stealth and puzzle game set around HKU at night. The p
 
 ## Team Members
 
-- George Adon Abraham - UID: 3036476267
-- Gupta Aikagra - UID: 3036474855
-- Gupta Akshat - UID: 3036476011
-- Kalpally Pulapra Mayur Menon - UID: 3036609187
-- Mathur Shikhar - UID: 3036476085
+- George Adon Abraham - UID: 3036476267 - GitHub: @adon-george
+- Gupta Aikagra - UID: 3036474855 - GitHub: @AikagraGupta
+- Gupta Akshat - UID: 3036476011 - GitHub: @Ak5hat-Gupta
+- Kalpally Pulapra Mayur Menon - UID: 3036609187 - GitHub: @mayurmenon
+- Mathur Shikhar - UID: 3036476085 - GitHub: @Adion114
 
 ## Quick Start
 
