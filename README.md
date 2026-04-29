@@ -44,6 +44,7 @@ No command-line arguments are needed.
 - Save and load system through `savegame.txt`, available from the start of the game.
 - Easy, Normal, and Hard modes with different time limits, event pressure, and hint levels.
 - High-contrast terminal UI with focused panels for current objective, location, paths, actions, and status.
+- Wider 116-character room screen with separate columns for room details, current status, objective progress, items, events, and location-specific ASCII art.
 
 ## Main Commands
 
@@ -90,6 +91,8 @@ The program is split across multiple files instead of being kept in one source f
 The game has three difficulty levels: Easy, Normal, and Hard. These change the time limit, event pressure, and amount of guidance shown to the player.
 
 The project includes in-code documentation. The header files describe what each function does, what inputs it expects, and what output or result it provides.
+
+The interface stays fully terminal-based while still being easy to read. The latest room screen uses color-coded headings, a status sidebar, and hand-written ASCII art for campus locations; these are implemented with standard console output in `src/game.cpp` and declarations in `include/game.h`, so no graphics library is needed.
 
 This README also covers the required submission information: team members, game description, implemented features, libraries used, and compilation/execution instructions.
 
