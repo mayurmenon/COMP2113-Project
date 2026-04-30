@@ -8,6 +8,7 @@
 #include "item.h"
 #include <memory>
 #include <map>
+#include <ctime>
 using namespace std;
 enum class Difficulty { Easy, Normal, Hard };
 class Game {
@@ -17,7 +18,7 @@ public:
     // Starts the menu and gameplay flow. Input: none. Output: none.
     void start();
     // Restores a saved run. Input: saved game values. Output: none.
-    void loadState(int minutes, Difficulty difficulty, const string& roomId, int suspicion, bool libraryClue, bool adminRoute, bool folder, int loopNumber, const string& inventoryData, int hideStreak, int totalMoves, int totalSearches, int itemsUsed, int codeFragmentsNeeded, const string& eventData = "", const string& latestEvent = "save loaded");
+    void loadState(int minutes, Difficulty difficulty, const string& roomId, int suspicion, bool libraryClue, bool adminRoute, bool folder, int loopNumber, const string& inventoryData, int hideStreak, int totalMoves, int totalSearches, int itemsUsed, int codeFragmentsNeeded, const string& eventData = "", const string& latestEvent = "save loaded", int peakSuspicion = 0, const string& visitedRoomsData = "", int realElapsedSeconds = 0);
     // Returns the current in-game time in minutes. Input: none. Output: total minutes.
     int currentMinutes() const;
     // Returns the current loop count. Input: none. Output: loop number.
@@ -40,6 +41,8 @@ public:
     string eventState() const;
     // Returns the latest event message. Input: none. Output: event text.
     const string& latestEvent() const;
+    // Returns real wall-clock seconds elapsed in this run. Input: none. Output: elapsed seconds.
+    int realElapsedSeconds() const;
 private:
     CampusMap map_;
     Player player_;

@@ -131,6 +131,11 @@ int Player::itemsUsed() const { return itemsUsed_; }
 int Player::hideStreak() const { return hideStreak_; }
 // Returns the highest suspicion value recorded during the run. Input: none. Output: peak suspicion.
 int Player::peakSuspicion() const { return peakSuspicion_; }
+void Player::setPeakSuspicion(int value) {
+    if (value < suspicion_) value = suspicion_;
+    if (value > 100) value = 100;
+    peakSuspicion_ = value;
+}
 // Returns the count of distinct rooms visited during the run. Input: none. Output: unique room count.
 int Player::uniqueRoomsVisited() const { return (int) visitedRooms_.size(); }
 
@@ -173,4 +178,27 @@ void Player::loadInventoryFromString(const string& data) {
             }
         }
     }
+}
+
+string Player::visitedRoomsAsString() const {
+    ostringstream out;
+    bool first = true;
+    for (set<string>::const_iterator it = visitedRooms_.begin(); it != visitedRooms_.end(); ++it) {
+        if (!first) out << ",";
+        out << *it;
+        first = false;
+    }
+    return out.str();
+}
+
+void Player::loadVisitedRoomsFromString(const string& data, const string& fallbackRoom) {
+    visitedRooms_.clear();
+    stringstream ss(data);
+    string roomId;
+    while (getline(ss, roomId, ',')) {
+        if (!roomId.empty()) visitedRooms_.insert(roomId);
+        if ((int) visitedRooms_.size() >= 100) break;
+    }
+    if (!fallbackRoom.empty()) visitedRooms_.insert(fallbackRoom);
+    if (visitedRooms_.empty()) visitedRooms_.insert("dorm");
 }

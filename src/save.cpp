@@ -38,7 +38,10 @@ bool SaveSystem::save(const Game& game, const string& path) {
     out << "moves=" << game.player().totalMoves() << '\n';
     out << "searches=" << game.player().totalSearches() << '\n';
     out << "itemsused=" << game.player().itemsUsed() << '\n';
+    out << "peaksuspicion=" << game.player().peakSuspicion() << '\n';
     out << "inventory=" << game.player().inventoryAsString() << '\n';
+    out << "visitedrooms=" << game.player().visitedRoomsAsString() << '\n';
+    out << "realseconds=" << game.realElapsedSeconds() << '\n';
     out << "lastevent=" << game.latestEvent() << '\n';
     out << "events=" << game.eventState() << '\n';
     return true;
@@ -59,7 +62,10 @@ bool SaveSystem::load(Game& game, const string& path) {
     int moves = 0;
     int searches = 0;
     int itemsUsed = 0;
+    int peakSuspicion = 0;
+    int realElapsedSeconds = 0;
     string inventory = "";
+    string visitedRooms = "";
     string latestEvent = "save loaded";
     string eventData = "";
     string line;
@@ -77,10 +83,13 @@ bool SaveSystem::load(Game& game, const string& path) {
         else if (line.rfind("moves=", 0) == 0) moves = parseIntOr(line.substr(6), moves);
         else if (line.rfind("searches=", 0) == 0) searches = parseIntOr(line.substr(9), searches);
         else if (line.rfind("itemsused=", 0) == 0) itemsUsed = parseIntOr(line.substr(10), itemsUsed);
+        else if (line.rfind("peaksuspicion=", 0) == 0) peakSuspicion = parseIntOr(line.substr(14), peakSuspicion);
         else if (line.rfind("inventory=", 0) == 0) inventory = line.substr(10);
+        else if (line.rfind("visitedrooms=", 0) == 0) visitedRooms = line.substr(13);
+        else if (line.rfind("realseconds=", 0) == 0) realElapsedSeconds = parseIntOr(line.substr(12), realElapsedSeconds);
         else if (line.rfind("lastevent=", 0) == 0) latestEvent = line.substr(10);
         else if (line.rfind("events=", 0) == 0) eventData = line.substr(7);
     }
-    game.loadState(time, parseDifficulty(difficulty), room, suspicion, library, admin, folder, loopNumber, inventory, hideStreak, moves, searches, itemsUsed, codeFragments, eventData, latestEvent);
+    game.loadState(time, parseDifficulty(difficulty), room, suspicion, library, admin, folder, loopNumber, inventory, hideStreak, moves, searches, itemsUsed, codeFragments, eventData, latestEvent, peakSuspicion, visitedRooms, realElapsedSeconds);
     return true;
 }

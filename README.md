@@ -45,6 +45,7 @@ No command-line arguments are needed.
 - Easy, Normal, and Hard modes with different time limits, event pressure, and hint levels.
 - High-contrast terminal UI with focused panels for current objective, location, paths, actions, and status.
 - Wider 116-character room screen with separate columns for room details, current status, objective progress, items, events, and location-specific ASCII art.
+- End-of-run achievement summary with escape rating, run statistics, rooms visited, peak suspicion, play time, and a play-again option.
 
 ## Main Commands
 
@@ -93,6 +94,8 @@ The game has three difficulty levels: Easy, Normal, and Hard. These change the t
 The project includes in-code documentation. The header files describe what each function does, what inputs it expects, and what output or result it provides.
 
 The interface stays fully terminal-based while still being easy to read. The latest room screen uses color-coded headings, a status sidebar, and hand-written ASCII art for campus locations; these are implemented with standard console output in `src/game.cpp` and declarations in `include/game.h`, so no graphics library is needed.
+
+The final summary screen adds another gameplay feedback layer by using tracked player statistics such as moves, searches, items used, unique rooms visited, peak suspicion, and elapsed time. These values are saved and loaded with the rest of the run state so resumed games still produce accurate end-of-run results.
 
 This README also covers the required submission information: team members, game description, implemented features, libraries used, and compilation/execution instructions.
 

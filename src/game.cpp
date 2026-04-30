@@ -381,7 +381,7 @@ void Game::start() {
         }
     }
 }
-void Game::loadState(int minutes, Difficulty difficulty, const string& roomId, int suspicion, bool libraryClue, bool adminRoute, bool folder, int loopNumber, const string& inventoryData, int hideStreak, int totalMoves, int totalSearches, int itemsUsed, int codeFragmentsNeeded, const string& eventData, const string& latestEvent) {
+void Game::loadState(int minutes, Difficulty difficulty, const string& roomId, int suspicion, bool libraryClue, bool adminRoute, bool folder, int loopNumber, const string& inventoryData, int hideStreak, int totalMoves, int totalSearches, int itemsUsed, int codeFragmentsNeeded, const string& eventData, const string& latestEvent, int peakSuspicion, const string& visitedRoomsData, int realElapsedSeconds) {
     difficulty_ = difficulty;
     currentMinutes_ = clampInt(minutes, 480, dayEnd() - 1);
     loopNumber_ = clampInt(loopNumber, 1, 9999);
@@ -398,13 +398,16 @@ void Game::loadState(int minutes, Difficulty difficulty, const string& roomId, i
     lastEvent_ = latestEvent.empty() ? "save loaded" : latestEvent;
     if (map_.get(roomId)) player_.moveTo(roomId);
     player_.setSuspicion(suspicion);
+    player_.setPeakSuspicion(peakSuspicion);
     player_.loadInventoryFromString(inventoryData);
+    player_.loadVisitedRoomsFromString(visitedRoomsData, player_.room());
     hideStreak = clampInt(hideStreak, 0, 3);
     for (int i = 0; i < hideStreak; i++) player_.incrementHideStreak();
     if (hideStreak > 0) player_.setHidden(true);
     for (int i = 0; i < clampInt(totalMoves, 0, 9999); i++) player_.incrementMoves();
     for (int i = 0; i < clampInt(totalSearches, 0, 9999); i++) player_.incrementSearches();
     for (int i = 0; i < clampInt(itemsUsed, 0, 9999); i++) player_.incrementItemsUsed();
+    realStartTime_ = time(nullptr) - clampInt(realElapsedSeconds, 0, 604800);
 }
 int Game::currentMinutes() const { return currentMinutes_; }
 int Game::loopNumber() const { return loopNumber_; }
@@ -428,6 +431,7 @@ string Game::eventState() const {
     return out.str();
 }
 const string& Game::latestEvent() const { return lastEvent_; }
+int Game::realElapsedSeconds() const { return clampInt((int) difftime(time(nullptr), realStartTime_), 0, 604800); }
 void Game::resetLoop(bool keepProgress, const string& reason) {
     if (keepProgress) loopNumber_++;
     else {
@@ -634,36 +638,38 @@ void Game::showGuide() const {
     drawBox("easy guide", lines);
 }
 void Game::playLoop() {
-    running_ = true;
-    won_ = false;
-    while (running_ && !won_ && !quit_) {
-        if (showTutorialNext_) {
-            showTutorial();
-            showTutorialNext_ = false;
-        }
-        clearScreen();
-        showHud();
-        showRoom();
-        if (difficulty_ == Difficulty::Easy) showGuide();
-        drawBox("command deck", commandDeck(difficulty_, onboardingStage()));
-        cout << prompt(player_.room());
-        string input;
-        if (!getline(cin, input)) {
-            quit_ = true;
-            return;
-        }
-        handle(Utils::trim(input));
-    }
-    if (won_) {
-        clearScreen();
-        // Show the summary and check if the player wants to go again.
-        bool again = showEndSummary();
+    bool keepPlaying = true;
+    while (keepPlaying && !quit_) {
+        running_ = true;
         won_ = false;
-        if (again && !quit_) {
-            // Restart immediately without returning to the main menu.
-            chooseDifficulty();
-            resetLoop(false, "");
-            playLoop();
+        while (running_ && !won_ && !quit_) {
+            if (showTutorialNext_) {
+                showTutorial();
+                showTutorialNext_ = false;
+            }
+            clearScreen();
+            showHud();
+            showRoom();
+            if (difficulty_ == Difficulty::Easy) showGuide();
+            drawBox("command deck", commandDeck(difficulty_, onboardingStage()));
+            cout << prompt(player_.room());
+            string input;
+            if (!getline(cin, input)) {
+                quit_ = true;
+                return;
+            }
+            handle(Utils::trim(input));
+        }
+        keepPlaying = false;
+        if (won_) {
+            clearScreen();
+            bool again = showEndSummary();
+            won_ = false;
+            if (again && !quit_) {
+                chooseDifficulty();
+                resetLoop(false, "");
+                keepPlaying = true;
+            }
         }
     }
 }
@@ -1387,7 +1393,7 @@ MovementContext Game::movementContext() const {
 }
 vector<string> Game::getAsciiArt(const string& roomId) const {
     string id = lowerText(roomId);
-    string art = "";
+    string art;
 
     if (id == "dorm") {
         art = R"(
@@ -1657,7 +1663,7 @@ vector<string> Game::getAsciiArt(const string& roomId) const {
 // 2. Peak suspicion tracking via Player::peakSuspicion()
 // 3. Unique rooms visited tracking via Player::uniqueRoomsVisited()
 // 4. Real wall-clock play time via realStartTime_ member
-// 5. Recursive playLoop() call for seamless play-again flow
+// 5. Iterative playLoop() restart for seamless play-again flow
 // 6. File header comment block with author and purpose
 // 7. Section separator comments throughout showEndSummary
 // =============================================================================

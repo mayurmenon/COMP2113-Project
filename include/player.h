@@ -75,6 +75,8 @@ public:
     int hideStreak() const;
     // Returns the highest suspicion value reached during the run. Input: none. Output: peak suspicion value.
     int peakSuspicion() const;
+    // Restores the highest suspicion value after loading. Input: saved peak suspicion. Output: none.
+    void setPeakSuspicion(int value);
     // Returns the number of distinct rooms entered during the run. Input: none. Output: unique room count.
     int uniqueRoomsVisited() const;
     // Returns a formatted vector of strings describing the player's performance. Input: none. Output: status lines.
@@ -85,6 +87,10 @@ public:
     string inventoryAsString() const;
     // Deserializes inventory string format and populates inventory mapping. Input: string. Output: none.
     void loadInventoryFromString(const string& data);
+    // Serializes visited room ids to a string. Input: none. Output: comma-separated room ids.
+    string visitedRoomsAsString() const;
+    // Deserializes visited room ids and ensures the current room is included. Input: string and fallback room. Output: none.
+    void loadVisitedRoomsFromString(const string& data, const string& fallbackRoom);
 private:
     string roomId_;
     int suspicion_;
