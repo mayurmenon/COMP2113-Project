@@ -58,6 +58,8 @@ private:
     int codeFragmentsNeeded_;
     unique_ptr<vector<game_event> > events_;
     string lastEvent_;
+    // Wall-clock time when the current run started, used to compute real play time.
+    time_t realStartTime_;
 
     // Resets the loop state. Input: keepProgress flag and reset reason. Output: none.
     void resetLoop(bool keepProgress, const string& reason);
@@ -111,6 +113,8 @@ private:
     void showInventory() const;
     // Shows the latest random event and active disruptions. Input: none. Output: none.
     void showEvent() const;
+    // Shows the end-of-run achievement summary after a successful escape. Returns true if player wants to play again. Input: none. Output: play-again flag.
+    bool showEndSummary() const;
     // Parses and runs one command. Input: raw user command. Output: none.
     void handle(const string& input);
     // Moves the player to a target room if valid. Input: target room text. Output: none.

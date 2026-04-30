@@ -28,6 +28,10 @@ void Player::reset() {
     totalMoves_ = 0;
     totalSearches_ = 0;
     itemsUsed_ = 0;
+    // Reset peak suspicion and room visit history for the new run.
+    peakSuspicion_ = 0;
+    visitedRooms_.clear();
+    visitedRooms_.insert("dorm");
 }
 const string& Player::room() const { return roomId_; }
 int Player::suspicion() const { return suspicion_; }
@@ -35,12 +39,16 @@ bool Player::hidden() const { return hidden_; }
 void Player::moveTo(const string& roomId) {
     roomId_ = roomId;
     hidden_ = false;
+    // Record each distinct room the player enters for the end summary.
+    visitedRooms_.insert(roomId);
 }
 void Player::addSuspicion(int amount) { setSuspicion(suspicion_ + amount); }
 void Player::setSuspicion(int amount) {
     if (amount < 0) amount = 0;
     if (amount > 100) amount = 100;
     suspicion_ = amount;
+    // Update peak suspicion whenever it is raised above the previous high.
+    if (suspicion_ > peakSuspicion_) peakSuspicion_ = suspicion_;
 }
 void Player::setHidden(bool hiddenValue) { hidden_ = hiddenValue; }
 
@@ -121,6 +129,10 @@ int Player::totalMoves() const { return totalMoves_; }
 int Player::totalSearches() const { return totalSearches_; }
 int Player::itemsUsed() const { return itemsUsed_; }
 int Player::hideStreak() const { return hideStreak_; }
+// Returns the highest suspicion value recorded during the run. Input: none. Output: peak suspicion.
+int Player::peakSuspicion() const { return peakSuspicion_; }
+// Returns the count of distinct rooms visited during the run. Input: none. Output: unique room count.
+int Player::uniqueRoomsVisited() const { return (int) visitedRooms_.size(); }
 
 vector<string> Player::statusSummary() const {
     vector<string> lines;

@@ -1,3 +1,11 @@
+// =============================================================================
+// File    : game.cpp
+// Author  : Adion114 (additions), original team (base implementation)
+// Date    : 2026-04-30
+// Purpose : Core game logic for LoopBreak. Manages the game loop, all player
+//           commands, UI panels, difficulty system, event engine, and the
+//           end-of-run achievement summary screen.
+// =============================================================================
 #include "game.h"
 #include <algorithm>
 #include <cctype>
@@ -338,7 +346,9 @@ Game::Game()
       folder_(false),
       showTutorialNext_(true),
       events_(new vector<game_event>),
-      lastEvent_("quiet campus") {
+      lastEvent_("quiet campus"),
+      // Record wall-clock start time so real play time can be shown at the end.
+      realStartTime_(time(nullptr)) {
     srand(time(nullptr));
     itemTable_ = createItemTable();
     codeFragmentsNeeded_ = (rand() % 3) + 1;
@@ -434,6 +444,8 @@ void Game::resetLoop(bool keepProgress, const string& reason) {
     running_ = true;
     won_ = false;
     showTutorialNext_ = true;
+    // Reset the wall-clock timer so real play time is measured from this loop start.
+    realStartTime_ = time(nullptr);
     if (!reason.empty()) {
         clearScreen();
         drawBox("loop reset", vector<string>{reason, "time returns to 08:00", "loop " + to_string(loopNumber_)});
@@ -644,9 +656,15 @@ void Game::playLoop() {
     }
     if (won_) {
         clearScreen();
-        drawBox("you win", vector<string>{"you reach the rooftop with the sealed folder", "the loop finally stops"});
-        pause();
+        // Show the summary and check if the player wants to go again.
+        bool again = showEndSummary();
         won_ = false;
+        if (again && !quit_) {
+            // Restart immediately without returning to the main menu.
+            chooseDifficulty();
+            resetLoop(false, "");
+            playLoop();
+        }
     }
 }
 void Game::showHud() const {
@@ -654,14 +672,14 @@ void Game::showHud() const {
     string hint = activeHint();
     if (hint.empty()) hint = map_.progressionSummary(movementContext(), folder_);
     lines.push_back(sectionHeading("NEXT FOCUS", goldColor));
-    appendWrappedLimited(lines, hint, 72, 2);
+    appendWrappedLimited(lines, hint, 72, 12);
     lines.push_back("");
     lines.push_back(sectionHeading("SNAPSHOT", cyanColor));
     lines.push_back("time " + Utils::formatTime(currentMinutes_) + " / risk " + player_.suspicionRiskLevel() + " / place " + player_.room());
     if (lastEvent_ != "quiet campus") {
         lines.push_back("");
         lines.push_back(sectionHeading("CAMPUS EVENT", roseColor));
-        appendWrappedLimited(lines, lastEvent_, 72, 1);
+        appendWrappedLimited(lines, lastEvent_, 72, 12);
     }
     drawBox("focus", lines);
 }
@@ -673,13 +691,13 @@ void Game::showRoom() const {
     left.push_back(sectionHeading("LOCATION", roomTone(room->id)));
     left.push_back(tint(room->name, roomTone(room->id)) + " [" + room->id + "]");
     left.push_back("");
-    appendWrappedLimited(left, room->description, 46, 2);
+    appendWrappedLimited(left, room->description, 43, 12);
     left.push_back("");
 
     left.push_back(sectionHeading("WHAT MATTERS HERE", amberColor));
     string roomFocus = room->progressionHintFor(loopNumber_, currentMinutes_);
     if (roomFocus.empty()) roomFocus = room->explorationFor(loopNumber_, currentMinutes_);
-    appendWrappedLimited(left, roomFocus.empty() ? "Use this room to keep the route moving." : roomFocus, 46, 2);
+    appendWrappedLimited(left, roomFocus.empty() ? "Use this room to keep the route moving." : roomFocus, 43, 12);
     if (room->restricted) left.push_back(tint("warning  watched room: search quickly", roseColor));
     else left.push_back(tint("safe     public room: good for planning", cyanColor));
     left.push_back("");
@@ -813,6 +831,115 @@ void Game::showEvent() const {
     }
     if (!anyActive) lines.push_back("active        no disruptions in play");
     drawBox("event", lines);
+}
+// ========== ADION114: END-OF-RUN ACHIEVEMENT SUMMARY SCREEN ==========
+// Shows a polished summary panel after a successful rooftop escape.
+// Displays run stats, a 5-tier rating, and a play-again prompt.
+// Input: none. Output: true if player wants to play again, false to return to menu.
+bool Game::showEndSummary() const {
+    // ========== RATING CALCULATION ==========
+    // Calculate rating based on final suspicion at the moment of escape.
+    // Five tiers from perfect stealth (0-20) to complete chaos (81-100).
+    string rating;
+    string ratingColor;
+    if (player_.suspicion() <= 20) {
+        // Tier 1: Clean Escape - perfect run, no one noticed you.
+        rating = "CLEAN ESCAPE";
+        ratingColor = cyanColor;
+    } else if (player_.suspicion() <= 40) {
+        // Tier 2: Smooth Escape - a few small mistakes, but clean overall.
+        rating = "SMOOTH ESCAPE";
+        ratingColor = brightColor;
+    } else if (player_.suspicion() <= 60) {
+        // Tier 3: Close Call - almost caught multiple times.
+        rating = "CLOSE CALL";
+        ratingColor = goldColor;
+    } else if (player_.suspicion() <= 80) {
+        // Tier 4: Messy Escape - many mistakes, left a trail.
+        rating = "MESSY ESCAPE";
+        ratingColor = amberColor;
+    } else {
+        // Tier 5: Disaster - complete chaos, barely escaped.
+        rating = "DISASTER";
+        ratingColor = roseColor;
+    }
+    int innerWidth = panelWidth - 4;
+    // ========== PANEL CONSTRUCTION ==========
+    // Build the lines vector that drawBox will render inside its frame.
+    vector<string> lines;
+    // Title banner.
+    lines.push_back(centerText(tint("E S C A P E   C O M P L E T E", brightColor), innerWidth));
+    lines.push_back(centerText(tint("the sealed file reaches the rooftop. the loop finally stops.", silverColor), innerWidth));
+    lines.push_back("");
+    // Rating badge centered in the panel.
+    lines.push_back(centerText(tint("[ " + rating + " ]", ratingColor), innerWidth));
+    lines.push_back("");
+    // ========== STAT BLOCK ==========
+    lines.push_back(tint("RUN SUMMARY", cyanColor));
+    lines.push_back(repeatChar('-', 40));
+    // Total moves taken across the winning run.
+    lines.push_back(padRight(tint("total moves", silverColor), 22) + tint(to_string(player_.totalMoves()), whiteColor));
+    // Total rooms searched during the run.
+    lines.push_back(padRight(tint("total searches", silverColor), 22) + tint(to_string(player_.totalSearches()), whiteColor));
+    // Number of items actively used, not just carried.
+    lines.push_back(padRight(tint("items used", silverColor), 22) + tint(to_string(player_.itemsUsed()), whiteColor));
+    // Unique rooms visited shows how much of the campus the player explored.
+    lines.push_back(padRight(tint("rooms visited", silverColor), 22) + tint(to_string(player_.uniqueRoomsVisited()), whiteColor));
+    // Hide streak shows how consistently the player used cover.
+    lines.push_back(padRight(tint("hide streak", silverColor), 22) + tint(to_string(player_.hideStreak()), whiteColor));
+    // Number of loops needed before the escape succeeded.
+    lines.push_back(padRight(tint("loops taken", silverColor), 22) + tint(to_string(loopNumber_), whiteColor));
+    // Difficulty setting chosen at the start of the run.
+    lines.push_back(padRight(tint("difficulty", silverColor), 22) + tint(difficultyName(), whiteColor));
+    // Approximate distance: each move covers roughly 50 metres of campus.
+    int distanceMetres = player_.totalMoves() * 50;
+    lines.push_back(padRight(tint("distance traveled", silverColor), 22) + tint(to_string(distanceMetres) + "m", whiteColor));
+    // In-game time elapsed since the run began at 08:00.
+    int minutesPlayed = currentMinutes_ - 480;
+    int hoursPlayed = minutesPlayed / 60;
+    int minsPlayed = minutesPlayed % 60;
+    string timePlayed = to_string(hoursPlayed) + "h " + (minsPlayed < 10 ? "0" : "") + to_string(minsPlayed) + "m";
+    lines.push_back(padRight(tint("time played", silverColor), 22) + tint(timePlayed, whiteColor));
+    // Real elapsed wall-clock time from run start to escape.
+    int realSeconds = (int) difftime(time(nullptr), realStartTime_);
+    int realMins = realSeconds / 60;
+    int realSecs = realSeconds % 60;
+    string realTime = to_string(realMins) + "m " + (realSecs < 10 ? "0" : "") + to_string(realSecs) + "s";
+    lines.push_back(padRight(tint("real play time", silverColor), 22) + tint(realTime, whiteColor));
+    // Peak suspicion shows the riskiest moment of the run.
+    string peakColor = player_.peakSuspicion() <= 35 ? brightColor : player_.peakSuspicion() <= 65 ? goldColor : roseColor;
+    lines.push_back(padRight(tint("peak suspicion", silverColor), 22) + tint(to_string(player_.peakSuspicion()) + "/100", peakColor));
+    // Final suspicion bar with colour shift based on risk level.
+    string suspBar = bar(player_.suspicion(), 100, 24);
+    string suspColor = player_.suspicion() <= 35 ? brightColor : player_.suspicion() <= 65 ? goldColor : roseColor;
+    lines.push_back(padRight(tint("final suspicion", silverColor), 22) + tint(suspBar, suspColor) + " " + tint(to_string(player_.suspicion()) + "/100", suspColor));
+    lines.push_back("");
+    // ========== DIFFICULTY CLOSING NOTE ==========
+    lines.push_back(tint("CLOSING NOTE", cyanColor));
+    lines.push_back(repeatChar('-', 40));
+    if (difficulty_ == Difficulty::Easy) lines.push_back("the route was open. you read it well and kept the pace steady.");
+    else if (difficulty_ == Difficulty::Hard) lines.push_back("no hints. no guide. you mapped the campus entirely on your own.");
+    else lines.push_back("the normal run gives you the shape but not the steps. you filled the gap.");
+    lines.push_back("");
+    // ========== RATING LEGEND ==========
+    lines.push_back(tint("RATING GUIDE", cyanColor));
+    lines.push_back(repeatChar('-', 40));
+    lines.push_back(tint("[ CLEAN ESCAPE   ]", cyanColor) + "  suspicion 0-20    perfect run, no one noticed");
+    lines.push_back(tint("[ SMOOTH ESCAPE  ]", brightColor) + "  suspicion 21-40   a few small mistakes, clean overall");
+    lines.push_back(tint("[ CLOSE CALL     ]", goldColor) + "  suspicion 41-60   almost caught multiple times");
+    lines.push_back(tint("[ MESSY ESCAPE   ]", amberColor) + "  suspicion 61-80   many mistakes, left a trail");
+    lines.push_back(tint("[ DISASTER       ]", roseColor) + "  suspicion 81-100  complete chaos, barely escaped");
+    lines.push_back("");
+    // ========== PLAY AGAIN PROMPT ==========
+    lines.push_back(centerText(tint("play again? type y to start a new run, or press enter to return to the menu", silverColor), innerWidth));
+    drawBox("you win", lines);
+    // Read the player's play-again response.
+    cout << "\n" << prompt("continue");
+    string again;
+    getline(cin, again);
+    // Return true only if the player explicitly types 'y' or 'yes'.
+    string choice = lowerText(again);
+    return choice == "y" || choice == "yes";
 }
 
 void Game::useItem(const string& itemName) {
@@ -1497,9 +1624,40 @@ vector<string> Game::getAsciiArt(const string& roomId) const {
         if (Utils::trim(line).empty() && centered.empty()) continue; // skip leading empty
         centered.push_back(line); // Keep leading spaces for alignment
     }
-    // Centering within the 36-char column
+    // Remove trailing empty lines.
+    while (!centered.empty() && Utils::trim(centered.back()).empty()) centered.pop_back();
+    // Center the entire art block as a unit so internal alignment is preserved.
+    // Find the widest visible line to determine the block width.
+    int maxArtWidth = 0;
     for (int i = 0; i < (int)centered.size(); i++) {
-        centered[i] = centerText(centered[i], 36);
+        int w = visibleLength(centered[i]);
+        if (w > maxArtWidth) maxArtWidth = w;
+    }
+    // Calculate uniform left padding to center the block within 36 chars.
+    int leftPad = (36 - maxArtWidth) / 2;
+    if (leftPad < 0) leftPad = 0;
+    string artPad = repeatChar(' ', leftPad);
+    for (int i = 0; i < (int)centered.size(); i++) {
+        centered[i] = artPad + centered[i];
     }
     return centered;
 }
+
+// =============================================================================
+// SUMMARY OF ADDITIONS BY ADION114
+// =============================================================================
+// 1. showEndSummary() - End-of-run achievement summary screen with:
+//    - 5-tier rating system based on final suspicion (Clean/Smooth/Close/Messy/Disaster)
+//    - Full stat block: moves, searches, items used, rooms visited, hide streak,
+//      loops taken, difficulty, distance traveled, in-game time, real play time,
+//      peak suspicion, final suspicion bar
+//    - Difficulty-specific closing remark
+//    - Rating legend showing all five tiers
+//    - Play Again prompt (Y/N) to restart without relaunching
+// 2. Peak suspicion tracking via Player::peakSuspicion()
+// 3. Unique rooms visited tracking via Player::uniqueRoomsVisited()
+// 4. Real wall-clock play time via realStartTime_ member
+// 5. Recursive playLoop() call for seamless play-again flow
+// 6. File header comment block with author and purpose
+// 7. Section separator comments throughout showEndSummary
+// =============================================================================

@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <set>
 #include "item.h"
 
 using namespace std;
@@ -72,6 +73,10 @@ public:
     int itemsUsed() const;
     // Returns the current hide streak. Input: none. Output: hide streak count.
     int hideStreak() const;
+    // Returns the highest suspicion value reached during the run. Input: none. Output: peak suspicion value.
+    int peakSuspicion() const;
+    // Returns the number of distinct rooms entered during the run. Input: none. Output: unique room count.
+    int uniqueRoomsVisited() const;
     // Returns a formatted vector of strings describing the player's performance. Input: none. Output: status lines.
     vector<string> statusSummary() const;
 
@@ -92,5 +97,9 @@ private:
     int totalMoves_;
     int totalSearches_;
     int itemsUsed_;
+    // Tracks the highest suspicion reached across the current run.
+    int peakSuspicion_;
+    // Tracks every distinct room id entered during the current run.
+    set<string> visitedRooms_;
 };
 #endif
