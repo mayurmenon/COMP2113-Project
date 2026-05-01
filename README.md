@@ -81,25 +81,18 @@ Room movement accepts both short ids and full names, for example `move admin` or
 
 ## How The Project Requirements Are Met
 
-Loopbreak includes random events through the event system in `include/event.h` and `src/event.cpp`. During gameplay, events such as rain, inspections, power dips, crowds, and staff meetings can trigger probabilistically and change route pressure, suspicion, or access conditions.
-
-The game uses data structures throughout the codebase. Rooms, routes, items, journal entries, events, inventory, player state, and progression flags are stored using classes, structs, enums, `vector`, and `map`.
-
-Dynamic memory management is used in the main game state. The active event list is owned through `unique_ptr<vector<game_event> >` in `include/game.h` and initialized in `src/game.cpp`, so dynamically allocated state is cleaned up automatically.
-
-File input and output are handled by the save system in `include/save.h` and `src/save.cpp`. The save file stores the current difficulty, time, room, suspicion, inventory, progress flags, run statistics, and event state. Loading is written defensively so missing or malformed values do not crash the game.
-
-The program is split across multiple files instead of being kept in one source file. `main.cpp` starts the game, headers live in `include/`, implementations live in `src/`, and the `Makefile` provides the build target used by the academy server.
-
-The game has three difficulty levels: Easy, Normal, and Hard. These change the time limit, event pressure, and amount of guidance shown to the player.
-
-The project includes in-code documentation. The header files describe what each function does, what inputs it expects, and what output or result it provides.
-
-The interface stays fully terminal-based while still being easy to read. The latest room screen uses color-coded headings, a status sidebar, and hand-written ASCII art for campus locations; these are implemented with standard console output in `src/game.cpp` and declarations in `include/game.h`, so no graphics library is needed.
-
-The final summary screen adds another gameplay feedback layer by using tracked player statistics such as moves, searches, items used, unique rooms visited, peak suspicion, and elapsed time. These values are saved and loaded with the rest of the run state so resumed games still produce accurate end-of-run results.
-
-This README also covers the required submission information: team members, game description, implemented features, libraries used, and compilation/execution instructions.
+| Requirement | How Loopbreak meets it |
+| --- | --- |
+| Random game events | `include/event.h` and `src/event.cpp` define events such as rain, inspections, power dips, crowds, and staff meetings. These can trigger during gameplay and change route pressure, suspicion, or access conditions. |
+| Data structures for storing data | Rooms, routes, items, journal entries, events, inventory, player state, and progression flags are stored with classes, structs, enums, `vector`, and `map`. |
+| Dynamic memory management | The active event list is owned through `unique_ptr<vector<game_event> >` in `include/game.h` and initialized in `src/game.cpp`, so dynamically allocated state is cleaned up automatically. |
+| File input/output | The save system in `include/save.h` and `src/save.cpp` writes and reads `savegame.txt`, including difficulty, time, room, suspicion, inventory, progress flags, run statistics, and event state. |
+| Multiple source files | `main.cpp` starts the game, headers are kept in `include/`, implementations are kept in `src/`, and the `Makefile` builds the project on the academy server. |
+| Multiple difficulty levels | Easy, Normal, and Hard change the time limit, event pressure, and amount of guidance shown to the player. |
+| In-code documentation and style | Header files document what each function does, what inputs it expects, and what output or result it provides. The source code is organized with readable naming and indentation. |
+| Terminal-based game requirement | The interface uses standard console output only, with color-coded headings, a status sidebar, room panels, and hand-written ASCII art. No graphics or non-standard UI library is required. |
+| Save/load robustness | Saving is available from the start of the game, loading resumes without replaying the tutorial, and malformed values are handled defensively instead of crashing. |
+| README submission details | This README includes team members, game description, implemented features, non-standard library information, and compilation/execution instructions. |
 
 ## Non-Standard Libraries
 
